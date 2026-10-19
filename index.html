@@ -273,7 +273,8 @@ const TYPES = {
   'music.fadeout': { name: 'Música: fade out', p: [['seconds', 'Segundos', 'num']] },
   'vog': { name: 'Voice of God: anuncio grabado', p: [['file', 'Anuncio', 'vog'], ['duck', 'Volumen de la música durante el anuncio (0–1)', 'num']] },
   'tts': { name: 'Voice of God: voz sintética', p: [['text', 'Texto', 'text'], ['duck', 'Volumen de la música (0–1)', 'num']] },
-  'vog.stop': { name: 'Voice of God: parar', p: [] }
+  'vog.stop': { name: 'Voice of God: parar', p: [] },
+  'link': { name: 'Spotify / enlace: abrir (lista o canción)', p: [['url', 'Enlace (pega el link de Spotify que te mandaron)', 'text']] }
 };
 function press (b, kk)
 {
@@ -304,7 +305,20 @@ function press (b, kk)
     case 'vog': if (S.vogOn === b.file) vogStop(); else vogPlay (b); break;
     case 'tts': tts (b); break;
     case 'vog.stop': vogStop(); break;
+    case 'link': openLink (b.url); break;
   }
+}
+
+// abrir un enlace (Spotify: directo en la app de Spotify)
+function openLink (url)
+{
+  url = String (url || '').trim();
+  if (!url) { toast ('Esta tecla no tiene enlace'); return; }
+  if (S.playing) musicPause (1);
+  const m = url.match (/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|track|artist|episode|show)\/([A-Za-z0-9]+)/);
+  if (m) { location.href = 'spotify:' + m[1] + ':' + m[2]; setTimeout (() => { if (document.visibilityState === 'visible') window.open (url, '_blank'); }, 1800); return; }   // si no hay app de Spotify, abre la web
+  if (/^spotify:/.test (url)) { location.href = url; return; }
+  window.open (/^https?:/.test (url) ? url : 'https://' + url, '_blank');
 }
 
 // ================================================================ dibujo
@@ -435,6 +449,8 @@ $('fSave').onclick = () =>
     b[el.dataset.key] = (k === 'num' || k === 'delay') ? Number (v) : k === 'bool' ? v === '1' : v;
   }
   if (!b.label && b.file) b.label = b.file.replace (/\.[^.]+$/, '').slice (0, 28);
+  if (b.type === 'link' && (!b.icon || b.icon === '🎵')) b.icon = '🟢';
+  if (b.type === 'link' && !b.label) b.label = 'Spotify';
   const btns = config.pages[page].buttons; while (btns.length < editIdx) btns.push (null); btns[editIdx] = b;
   save(); $('dlg').close(); render();
 };
@@ -571,6 +587,6 @@ $('bReopen').onclick = () => location.reload();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=8"></script>
+<script src="clip.js?v=9"></script>
 </body>
 </html>
