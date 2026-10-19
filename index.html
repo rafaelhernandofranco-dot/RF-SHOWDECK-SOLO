@@ -316,6 +316,13 @@ function tapLink (href, blank)
   const a = document.createElement ('a'); a.href = href; if (blank) { a.target = '_blank'; a.rel = 'noopener'; }
   a.style.display = 'none'; document.body.appendChild (a); a.click(); setTimeout (() => a.remove(), 1000);
 }
+function linkHrefs (url)
+{
+  url = String (url || '').trim();
+  const web = /^https?:/i.test (url) ? url : (/^spotify:/i.test (url) ? 'https://open.spotify.com/' + url.split (':').slice (1).join ('/') : (url ? 'https://' + url : ''));
+  const m = web.match (/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|track|artist|episode|show)\/([A-Za-z0-9]+)/);
+  return { web, app: m ? 'spotify:' + m[1] + ':' + m[2] : null };
+}
 function openLink (url)
 {
   url = String (url || '').trim();
@@ -367,7 +374,9 @@ function render ()
   for (let i = 0; i < cols * rows; ++i)
   {
     const b = btns[i];
-    const k = document.createElement ('div');
+    const isLink = b && b.type === 'link' && !editing;
+    const k = document.createElement (isLink ? 'a' : 'div');
+    if (isLink) { const L = linkHrefs (b.url); k.href = L.app || L.web; if (!L.app) { k.target = '_blank'; k.rel = 'noopener'; } k.style.textDecoration = 'none'; k.style.color = 'inherit'; }
     if (!b) { k.className = 'key empty'; k.textContent = editing ? '+' : ''; k.onclick = () => editing && openEditor (i); g.appendChild (k); continue; }
     const kk = page + ':' + i;
     const lit = (b.type === 'music.play' && S.key === kk && S.playing) || (b.type === 'music.toggle' && S.playing) || (b.type === 'vog' && S.vogOn === b.file);
@@ -384,7 +393,7 @@ function render ()
       const d = S.clip ? (S.clip.end - (S.clip.start || 0)) : music.duration, t = music.currentTime - (S.clip ? S.clip.start || 0 : 0);
       k.insertAdjacentHTML ('beforeend', '<div class="kp"><i style="width:' + (d ? Math.min (100, 100 * t / d) : 0).toFixed (1) + '%;background:' + (b.color || '#5cc8ff') + '"></i></div>');
     }
-    k.onclick = () => { if (swallow) return; editing ? openEditor (i) : press (b, kk); };
+    k.onclick = (ev) => { if (swallow) { ev.preventDefault(); return; } if (isLink) { if (S.playing) musicPause (1); return; } editing ? openEditor (i) : press (b, kk); };   // la tecla de enlace es un enlace real: el iPad lo abre
     g.appendChild (k);
   }
   renderNow();
@@ -596,6 +605,6 @@ $('bReopen').onclick = () => location.reload();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=10"></script>
+<script src="clip.js?v=11"></script>
 </body>
 </html>
