@@ -496,9 +496,25 @@ $('fileIn').onchange = async () =>
     catch (e) { $('iStatus').textContent = '⚠️ No se pudo guardar ' + f.name + ': ' + (e && e.message || e); }
   }
   $('fileIn').value = '';
+  // crear una tecla para cada cancion nueva (en los espacios vacios de la pagina actual)
+  let made = 0;
+  const used = new Set (config.pages.flatMap (p => p.buttons.filter (Boolean).map (b => b.file)));
+  const { cols, rows } = gridSize(), btns = config.pages[page].buttons;
+  for (const f of files)
+  {
+    if (used.has (f.name)) continue;
+    let slot = -1; for (let i = 0; i < cols * rows; ++i) if (!btns[i]) { slot = i; break; }
+    if (slot < 0) break;
+    while (btns.length <= slot) btns.push (null);
+    btns[slot] = folder === 'vog'
+      ? { label: f.name.replace (/\.[^.]+$/, '').slice (0, 28), icon: '📢', color: '#b48cff', type: 'vog', file: f.name, duck: 0.2 }
+      : { label: f.name.replace (/\.[^.]+$/, '').slice (0, 28), icon: '🎵', color: '#5cc8ff', type: 'music.play', file: f.name };
+    used.add (f.name); ++made;
+  }
+  if (made) { save(); render(); }
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
   await loadLib();
-  $('iStatus').textContent = '✅ ' + files.length + ' archivo(s) guardado(s). Ahora en Editar asígnalos a las teclas.';
+  $('iStatus').textContent = '✅ ' + files.length + ' archivo(s) guardado(s)' + (made ? ' y ' + made + ' tecla(s) creada(s) en esta página.' : '. Asígnalos a las teclas en Editar.');
 };
 async function openLib ()
 {
