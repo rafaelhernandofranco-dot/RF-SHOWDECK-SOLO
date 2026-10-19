@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RF Showdeck">
+<meta name="theme-color" content="#0b1118">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<title>RF Showdeck Solo</title>
+<style>
+  :root { --bg:#0b1118; --panel:#141e2b; --panel2:#1a2636; --line:#2a3a52; --text:#d8e2f0; --dim:#8aa0bd; --cyan:#5cc8ff; --amber:#ffd166; --red:#ff6b6b; --green:#3ddc84; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; background:var(--bg); color:var(--text); font-family:-apple-system, system-ui, "Segoe UI", sans-serif; overscroll-behavior:none; }
+  body { padding:max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); height:100vh; height:100dvh; display:flex; flex-direction:column; gap:10px; overflow:hidden; -webkit-user-select:none; user-select:none; }
+  header { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .logo { display:flex; align-items:center; gap:10px; line-height:1; }
+  .logo svg { width:34px; height:34px; flex:none; }
+  .logo .name { font-family:"Avenir Next", -apple-system, sans-serif; font-size:19px; letter-spacing:.16em; }
+  .logo .name b { font-weight:800; color:#f2f6fb; } .logo .name i { font-style:normal; font-weight:300; color:var(--cyan); }
+  .logo .solo { font-size:10px; letter-spacing:.3em; color:var(--amber); margin-left:6px; }
+  .pill { font-size:11px; font-weight:600; color:var(--dim); border:1px solid var(--line); border-radius:20px; padding:4px 10px; }
+  .sp { flex:1; }
+  .hbtn { background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px 14px; font:600 14px system-ui; cursor:pointer; }
+  .hbtn.on { background:var(--amber); color:#111; border-color:var(--amber); }
+  .primary { background:var(--cyan); color:#0b1118; border-color:var(--cyan); }
+  .danger { color:var(--red); border-color:#5a2a30; }
+  nav { display:flex; gap:8px; overflow-x:auto; flex:none; }
+  nav button { flex:none; background:transparent; color:var(--dim); border:1px solid var(--line); border-radius:20px; padding:8px 16px; font:600 14px system-ui; }
+  nav button.cur { background:var(--cyan); color:#0b1118; border-color:var(--cyan); }
+  nav button.mv-target { outline:2px dashed var(--amber); color:var(--amber); }
+  #grid { flex:1; min-height:0; display:grid; grid-template-columns:repeat(var(--cols,6), minmax(0,1fr)); grid-template-rows:repeat(var(--rows,4), minmax(0,1fr)); gap:10px; }
+  .key { position:relative; border-radius:16px; background:var(--panel); border:1px solid #253650; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:12px 6px 10px; text-align:center; overflow:hidden; cursor:pointer; touch-action:manipulation; transition:transform .06s; }
+  .key:active { transform:scale(.97); }
+  .key .bar { position:absolute; top:8px; left:12px; right:12px; height:4px; border-radius:2px; }
+  .key .ico { font-size:26px; line-height:1; }
+  .key .lbl { font-size:13px; font-weight:700; color:#eef3f9; line-height:1.15; }
+  .key .sub { font-size:11px; font-weight:600; color:#8fa3bd; min-height:13px; }
+  .key .kp { position:absolute; left:12px; right:12px; bottom:8px; height:4px; border-radius:2px; background:#24344d; } .key .kp i { display:block; height:100%; border-radius:2px; }
+  .key.empty { background:transparent; border:1.5px dashed #243349; color:var(--dim); font-size:22px; }
+  .key.lit { border:2px solid var(--cyan); background:#15283a; box-shadow:0 0 0 4px rgba(92,200,255,.12); }
+  .key.paused { border:2px dashed var(--cyan); }
+  .key.pending { border:2px solid var(--amber); background:#2a2414; animation:blink 1s infinite; }
+  @keyframes blink { 50% { opacity:.7; } }
+  body.editing .key:not(.empty) { outline:2px dashed var(--amber); outline-offset:-5px; touch-action:none; }
+  .key.mv-origin { opacity:.25; } .key.mv-target { outline:3px solid var(--cyan) !important; }
+  .mv-ghost { position:fixed; z-index:50; pointer-events:none; transform:rotate(-4deg) scale(1.05); box-shadow:0 20px 45px rgba(0,0,0,.6); }
+  #now { flex:none; display:flex; align-items:center; gap:12px; background:#121b27; border:1px solid #22324a; border-radius:16px; padding:10px 14px; }
+  .tbtn { width:46px; height:46px; border-radius:50%; border:1px solid var(--line); background:var(--panel2); color:var(--text); font-size:18px; flex:none; }
+  .tbtn.pri { background:var(--cyan); color:#0b1118; border-color:var(--cyan); }
+  #now .t { flex:1; min-width:0; display:flex; flex-direction:column; gap:5px; }
+  #nName { font-weight:700; color:#f2f6fb; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } #nMeta { font-size:12px; color:var(--dim); }
+  #prog { height:5px; border-radius:3px; background:#24344d; } #prog i { display:block; height:100%; width:0; background:var(--cyan); border-radius:3px; }
+  #vol { width:150px; accent-color:var(--cyan); }
+  dialog { background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:16px; width:min(560px, 94vw); padding:18px; max-height:90vh; overflow:auto; }
+  dialog::backdrop { background:rgba(0,0,0,.6); }
+  dialog h3 { margin:0 0 12px; }
+  .row { display:flex; flex-direction:column; gap:5px; margin-bottom:10px; } .row label { font-size:12px; color:var(--dim); }
+  .row input, .row select, .row textarea { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:10px; font:15px system-ui; width:100%; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .actions { display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:8px; }
+  .hint { font-size:12px; color:var(--dim); margin:4px 0; }
+  #libList { display:flex; flex-direction:column; gap:4px; max-height:50vh; overflow:auto; margin:8px 0; }
+  #libList .it { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:10px; background:var(--bg); font-size:13px; }
+  #libList .it .n { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #libList .it .s { color:var(--dim); font-size:12px; }
+  #rotate { display:none; position:fixed; inset:0; z-index:100; background:var(--bg); flex-direction:column; align-items:center; justify-content:center; gap:10px; }
+  @media (orientation:portrait) and (max-width:820px) { #rotate { display:flex; } }
+  #toast { position:fixed; left:50%; bottom:90px; transform:translateX(-50%); background:#1d2c40; border:1px solid var(--line); color:var(--text); padding:10px 16px; border-radius:12px; font-size:14px; display:none; z-index:80; }
+  @media (max-height:600px) { .key .ico { font-size:20px; } .key .lbl { font-size:11px; } .key .sub { display:none; } #grid { gap:7px; } }
+</style>
+</head>
+<body>
+<div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF Showdeck se usa en horizontal</div></div>
+<header>
+  <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
+    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span></div></div>
+  <span class="pill" id="pStore">—</span>
+  <div class="sp"></div>
+  <button class="hbtn" id="bGrid" style="display:none">6 × 4</button>
+  <button class="hbtn" id="bImport">Importar</button>
+  <button class="hbtn" id="bLib">Biblioteca</button>
+  <button class="hbtn" id="bEdit">Editar</button>
+</header>
+<nav id="pages"></nav>
+<div id="grid"></div>
+<div id="now">
+  <button class="tbtn pri" id="nPlay" aria-label="Reproducir o pausar">▶</button>
+  <button class="tbtn" id="nStop" aria-label="Detener">■</button>
+  <div class="t"><div id="nName">Sin música</div><div id="nMeta">—</div><div id="prog"><i></i></div></div>
+  <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8" aria-label="Volumen de la música">
+</div>
+<input type="file" id="fileIn" accept="audio/*,.mp3,.m4a,.wav,.aac,.aif,.aiff" multiple hidden>
+<div id="toast"></div>
+
+<dialog id="dlg">
+  <h3 id="dTitle">Tecla</h3>
+  <div class="two"><div class="row"><label>Nombre</label><input id="fLabel"></div><div class="row"><label>Ícono (emoji)</label><input id="fIcon" maxlength="4"></div></div>
+  <div class="two"><div class="row"><label>Color</label><input id="fColor" type="color" value="#5cc8ff" style="height:44px;padding:4px"></div><div class="row"><label>Acción</label><select id="fType"></select></div></div>
+  <div id="fParams"></div>
+  <div class="actions"><button class="hbtn danger" id="fDel" style="margin-right:auto">Eliminar</button><button class="hbtn" id="fCancel">Cancelar</button><button class="hbtn primary" id="fSave">Guardar</button></div>
+</dialog>
+
+<dialog id="imp">
+  <h3>Importar</h3>
+  <p class="hint" style="margin-top:-6px">Elige canciones desde la app Archivos: el iPad, iCloud o un USB conectado. Quedan guardadas dentro de RF Showdeck.</p>
+  <div class="row"><label>Guardar como</label><select id="iFolder"><option value="music">Música</option><option value="vog">Voice of God (anuncios)</option></select></div>
+  <p class="hint" id="iStatus"></p>
+  <div class="actions"><button class="hbtn" id="iClose">Cerrar</button><button class="hbtn primary" id="iPick">Elegir archivos…</button></div>
+</dialog>
+
+<dialog id="lib">
+  <h3>Biblioteca</h3>
+  <p class="hint" id="lUse" style="margin-top:-6px"></p>
+  <div id="libList"></div>
+  <div class="actions"><button class="hbtn" id="lClose">Cerrar</button></div>
+</dialog>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById (id);
+const toast = (t, ms = 2500) => { const e = $('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout (toast.t); toast.t = setTimeout (() => e.style.display = 'none', ms); };
+const fmt = (s) => isFinite (s) ? Math.floor (s / 60) + ':' + String (Math.floor (s % 60)).padStart (2, '0') : '0:00';
+const mb = (b) => b >= 1e9 ? (b / 1e9).toFixed (1) + ' GB' : (b / 1e6).toFixed (b < 1e7 ? 1 : 0) + ' MB';
+
+// ================================================================ almacenamiento (IndexedDB)
+let db;
+const idb = () => new Promise ((ok, bad) =>
+{
+  const r = indexedDB.open ('rfshowdeck-solo', 1);
+  r.onupgradeneeded = () => { r.result.createObjectStore ('files', { keyPath: 'id' }); r.result.createObjectStore ('kv'); };
+  r.onsuccess = () => ok (r.result); r.onerror = () => bad (r.error);
+});
+const tx = (store, mode, fn) => new Promise ((ok, bad) => { const t = db.transaction (store, mode); const s = t.objectStore (store); const res = fn (s); t.oncomplete = () => ok (res && res.result !== undefined ? res.result : res); t.onerror = () => bad (t.error); });
+const kvGet = (k) => new Promise ((ok) => { const r = db.transaction ('kv').objectStore ('kv').get (k); r.onsuccess = () => ok (r.result); r.onerror = () => ok (undefined); });
+const kvSet = (k, v) => tx ('kv', 'readwrite', s => s.put (v, k));
+const fileGet = (id) => new Promise ((ok) => { const r = db.transaction ('files').objectStore ('files').get (id); r.onsuccess = () => ok (r.result); r.onerror = () => ok (null); });
+let lib = { music: [], vog: [] };           // [{id, name, size}]
+async function loadLib ()
+{
+  const all = await new Promise ((ok) => { const out = []; const c = db.transaction ('files').objectStore ('files').openCursor (); c.onsuccess = () => { const cur = c.result; if (cur) { const v = cur.value; out.push ({ id: v.id, name: v.name, size: v.size, folder: v.folder }); cur.continue(); } else ok (out); }; });
+  lib.music = all.filter (f => f.folder === 'music').sort ((a, b) => a.name.localeCompare (b.name, undefined, { numeric: true }));
+  lib.vog = all.filter (f => f.folder === 'vog').sort ((a, b) => a.name.localeCompare (b.name, undefined, { numeric: true }));
+  storeInfo();
+}
+async function storeInfo ()
+{
+  try { const e = await navigator.storage.estimate(); $('pStore').textContent = (lib.music.length + lib.vog.length) + ' archivos · ' + mb (e.usage || 0); } catch { $('pStore').textContent = (lib.music.length + lib.vog.length) + ' archivos'; }
+}
+
+// ================================================================ configuracion
+const DEFAULT = { grid: { cols: 6, rows: 4 }, vol: 0.8, pages: [
+  { name: 'Evento', buttons: [
+    { label: 'Play / Pausa', icon: '⏯️', color: '#5cc8ff', type: 'music.toggle' },
+    { label: 'Fade out', icon: '🔉', color: '#ffd166', type: 'music.fadeout', seconds: 3 },
+    { label: 'Bienvenida', icon: '🗣️', color: '#b48cff', type: 'tts', text: 'Bienvenidos. Por favor tomen asiento, el evento está por comenzar.', duck: 0.2 },
+    { label: 'Parar anuncio', icon: '🤫', color: '#b48cff', type: 'vog.stop' }
+  ] } ] };
+let config = null, page = 0, editing = false, editIdx = -1;
+const save = () => kvSet ('config', config);
+
+// ================================================================ motor de audio
+let ctx = null, musicGain = null, vogGain = null;
+const music = new Audio(), vog = new Audio();
+music.preload = vog.preload = 'auto'; music.playsInline = vog.playsInline = true;
+const S = { file: null, playing: false, paused: false, pending: null, loop: false, clip: null, duck: 1, url: null, vurl: null, vogOn: false };
+function audioInit ()
+{
+  if (ctx) { if (ctx.state !== 'running') ctx.resume(); return; }
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  musicGain = ctx.createGain(); vogGain = ctx.createGain();
+  ctx.createMediaElementSource (music).connect (musicGain).connect (ctx.destination);
+  ctx.createMediaElementSource (vog).connect (vogGain).connect (ctx.destination);
+  musicGain.gain.value = 0;
+  // desbloquear los reproductores en iPad (deben "sonar" una vez dentro de un toque)
+  const SIL = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+  for (const a of [music, vog]) { if (!a.src) { a.src = SIL; a.play().then (() => a.pause()).catch (() => {}); } }
+}
+document.addEventListener ('touchend', audioInit, { passive: true }); document.addEventListener ('click', audioInit);
+
+const level = () => (config ? config.vol : 0.8) * S.duck * (S.clip ? Math.pow (10, (S.clip.gainDb || 0) / 20) : 1);
+function ramp (g, to, sec)
+{
+  if (!g) return; const t = ctx.currentTime; if (g === musicGain) S.fadeUntil = Date.now() + sec * 1000 + 50;
+  g.gain.cancelScheduledValues (t); g.gain.setValueAtTime (g.gain.value, t);
+  if (sec > 0) g.gain.linearRampToValueAtTime (to, t + sec); else g.gain.setValueAtTime (to, t);
+}
+async function urlFor (name, folder)
+{
+  const f = await fileGet (folder + '/' + name);
+  return f ? URL.createObjectURL (f.blob) : null;
+}
+async function musicPlay (b)
+{
+  audioInit();
+  const url = await urlFor (b.file, 'music');
+  if (!url) { toast ('No encuentro «' + b.file + '» en la biblioteca'); return; }
+  if (S.url) URL.revokeObjectURL (S.url);
+  S.url = url; S.file = b.file; S.paused = false; S.loop = !!b.loop; S.clip = (config.clips || {})[b.file] || null; S.fadeOutKey = b.fadeOut || 0;
+  music.src = url; music.loop = S.loop && !S.clip;
+  const startAt = S.clip ? S.clip.start || 0 : 0;
+  music.addEventListener ('loadedmetadata', () => { if (startAt) try { music.currentTime = startAt; } catch {} }, { once: true });
+  ramp (musicGain, 0, 0);
+  try { await music.play(); } catch (e) { toast ('Toca la pantalla una vez para activar el audio'); return; }
+  ramp (musicGain, level(), b.fadeIn || 0.02);
+  S.playing = true; render();
+}
+function musicPause (fade = 0.3) { ramp (musicGain, 0, fade); setTimeout (() => { music.pause(); }, fade * 1000 + 30); S.playing = false; S.paused = true; render(); }
+function musicResume (fade = 0.3) { audioInit(); music.play().catch (() => {}); ramp (musicGain, level(), fade); S.playing = true; S.paused = false; render(); }
+function musicStop (fade = 0) { ramp (musicGain, 0, fade); setTimeout (() => { music.pause(); try { music.currentTime = S.clip ? S.clip.start || 0 : 0; } catch {} }, fade * 1000 + 30); S.playing = false; S.paused = false; render(); }
+function cancelPending () { if (S.pending) { clearTimeout (S.pending.timer); S.pending = null; } }
+
+async function vogPlay (b)
+{
+  audioInit();
+  const url = await urlFor (b.file, 'vog'); if (!url) { toast ('No encuentro el anuncio «' + b.file + '»'); return; }
+  if (S.vurl) URL.revokeObjectURL (S.vurl);
+  S.vurl = url; vog.src = url; vogGain.gain.value = 1;
+  duck (b.duck ?? 0.2);
+  S.vogOn = b.file;
+  vog.play().catch (() => toast ('Toca la pantalla una vez para activar el audio'));
+  render();
+}
+function duck (to) { S.duck = to; if (S.playing) ramp (musicGain, level(), 0.4); }
+function unduck () { S.duck = 1; if (S.playing) ramp (musicGain, level(), 0.8); S.vogOn = false; render(); }
+vog.onended = unduck;
+function vogStop () { vog.pause(); speechSynthesis.cancel(); unduck(); }
+function tts (b)
+{
+  audioInit();
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance (b.text || '');
+  const v = speechSynthesis.getVoices().find (v => v.lang && v.lang.toLowerCase().startsWith (b.lang || 'es'));
+  if (v) u.voice = v; u.lang = v ? v.lang : (b.lang || 'es'); u.rate = 0.95;
+  u.onstart = () => duck (b.duck ?? 0.2); u.onend = unduck;
+  speechSynthesis.speak (u);
+}
+
+// fades por posicion (editor de clip) y fin de clip
+const curve = (k, c) => { k = Math.max (0, Math.min (1, k)); return c === 'lin' ? k : c === 'exp' ? k * k : Math.sin (k * Math.PI / 2); };
+setInterval (() =>
+{
+  if (!S.playing || music.paused) return;
+  const c = S.clip, t = music.currentTime;
+  if (c)
+  {
+    let e = 1;
+    if (c.fadeIn > 0 && t < c.start + c.fadeIn) e *= curve ((t - c.start) / c.fadeIn, c.inCurve);
+    if (c.fadeOut > 0 && t > c.end - c.fadeOut) e *= curve ((c.end - t) / c.fadeOut, c.outCurve);
+    if (musicGain && Date.now() > (S.fadeUntil || 0)) musicGain.gain.value = level() * e;
+    if (t >= c.end - 0.03) { if (S.loop) music.currentTime = c.start || 0; else { music.pause(); S.playing = false; render(); } }
+  }
+}, 40);
+music.onended = () => { if (!S.loop) { S.playing = false; S.paused = false; render(); } };
+setInterval (() => { if (S.playing || S.pending) { renderNow(); renderSubs(); } }, 250);
+
+// ================================================================ acciones de teclas
+const TYPES = {
+  'music.play': { name: 'Música: tecla (pulsar = suena, otra vez = pausa)', p: [['file', 'Canción', 'music'], ['delay', 'Delay antes de sonar', 'delay'], ['fadeIn', 'Fade in (s)', 'num'], ['fadeOut', 'Fade out al pausar (s)', 'num'], ['loop', 'Repetir en bucle', 'bool'], ['repress', 'Al pulsar otra vez', 'repress']] },
+  'music.toggle': { name: 'Música: play / pausa general', p: [] },
+  'music.stop': { name: 'Música: detener', p: [['fade', 'Fade (s)', 'num']] },
+  'music.fadeout': { name: 'Música: fade out', p: [['seconds', 'Segundos', 'num']] },
+  'vog': { name: 'Voice of God: anuncio grabado', p: [['file', 'Anuncio', 'vog'], ['duck', 'Volumen de la música durante el anuncio (0–1)', 'num']] },
+  'tts': { name: 'Voice of God: voz sintética', p: [['text', 'Texto', 'text'], ['duck', 'Volumen de la música (0–1)', 'num']] },
+  'vog.stop': { name: 'Voice of God: parar', p: [] }
+};
+function press (b)
+{
+  audioInit();
+  switch (b.type)
+  {
+    case 'music.play':
+    {
+      if (S.pending && S.pending.file === b.file) { cancelPending(); render(); return; }
+      if (S.file === b.file && S.playing) { cancelPending(); b.repress === 'stop' ? musicStop (b.fadeOut || 0) : musicPause (b.fadeOut || 0.3); return; }
+      if (S.file === b.file && S.paused && b.repress !== 'stop') { cancelPending(); musicResume(); return; }
+      cancelPending();
+      const delay = Number (b.delay) || 0;
+      if (delay > 0)
+      {
+        // desbloquear el reproductor dentro de este toque; arrancara al terminar la cuenta
+        music.play().then (() => music.pause()).catch (() => {});
+        S.pending = { file: b.file, end: Date.now() + delay * 1000, timer: setTimeout (() => { S.pending = null; musicPlay (b); }, delay * 1000) };
+        render();
+      }
+      else musicPlay (b);
+      break;
+    }
+    case 'music.toggle': if (S.playing) musicPause(); else if (S.paused) musicResume(); else toast ('Primero toca una tecla de música'); break;
+    case 'music.stop': cancelPending(); musicStop (b.fade || 0); break;
+    case 'music.fadeout': cancelPending(); musicStop (b.seconds || 3); break;
+    case 'vog': if (S.vogOn === b.file) vogStop(); else vogPlay (b); break;
+    case 'tts': tts (b); break;
+    case 'vog.stop': vogStop(); break;
+  }
+}
+
+// ================================================================ dibujo
+function gridSize () { return config.grid || { cols: 6, rows: 4 }; }
+function subFor (b)
+{
+  if (b.type === 'music.play')
+  {
+    if (S.pending && S.pending.file === b.file) return 'Inicia en ' + Math.ceil ((S.pending.end - Date.now()) / 1000) + ' s';
+    if (S.file === b.file && S.playing) return fmt (music.currentTime) + ' / ' + fmt (S.clip ? S.clip.end : music.duration);
+    if (S.file === b.file && S.paused) return '⏸ ' + fmt (music.currentTime);
+    return (b.delay ? '⏱ ' + b.delay + ' s ' : '') + (b.loop ? '↻' : '');
+  }
+  if (b.type === 'vog') return S.vogOn === b.file ? 'Sonando' : '';
+  return '';
+}
+function renderPages ()
+{
+  const nav = $('pages'); nav.innerHTML = '';
+  config.pages.forEach ((p, i) =>
+  {
+    const b = document.createElement ('button'); b.textContent = p.name; if (i === page) b.className = 'cur';
+    b.onclick = () => { page = i; render(); };
+    if (editing) b.ondblclick = () => { const n = prompt ('Nombre de la página (vacío = eliminar)', p.name); if (n === null) return; if (n === '') { if (config.pages.length > 1 && confirm ('¿Eliminar la página?')) { config.pages.splice (i, 1); page = 0; } } else p.name = n; save(); render(); };
+    nav.appendChild (b);
+  });
+  if (editing) { const a = document.createElement ('button'); a.textContent = '+ Página'; a.onclick = () => { config.pages.push ({ name: 'Página ' + (config.pages.length + 1), buttons: [] }); page = config.pages.length - 1; save(); render(); }; nav.appendChild (a); }
+}
+function render ()
+{
+  if (window.__moving || !config) return;
+  renderPages();
+  const g = $('grid'); g.innerHTML = '';
+  const { cols, rows } = gridSize(); g.style.setProperty ('--cols', cols); g.style.setProperty ('--rows', rows);
+  $('bGrid').textContent = cols + ' × ' + rows;
+  const btns = config.pages[page].buttons;
+  for (let i = 0; i < cols * rows; ++i)
+  {
+    const b = btns[i];
+    const k = document.createElement ('div');
+    if (!b) { k.className = 'key empty'; k.textContent = editing ? '+' : ''; k.onclick = () => editing && openEditor (i); g.appendChild (k); continue; }
+    const lit = (b.type === 'music.play' && S.file === b.file && S.playing) || (b.type === 'music.toggle' && S.playing) || (b.type === 'vog' && S.vogOn === b.file);
+    const paused = b.type === 'music.play' && S.file === b.file && S.paused;
+    const pend = b.type === 'music.play' && S.pending && S.pending.file === b.file;
+    k.className = 'key' + (lit ? ' lit' : '') + (paused ? ' paused' : '') + (pend ? ' pending' : '');
+    k.innerHTML = '<div class="bar"></div><div class="ico"></div><div class="lbl"></div><div class="sub"></div>';
+    k.querySelector ('.bar').style.background = b.color || '#5cc8ff';
+    k.querySelector ('.ico').textContent = b.icon || '🎵';
+    k.querySelector ('.lbl').textContent = b.label || '';
+    k.querySelector ('.sub').textContent = subFor (b);
+    if (b.type === 'music.play' && S.file === b.file && (S.playing || S.paused))
+    {
+      const d = S.clip ? (S.clip.end - (S.clip.start || 0)) : music.duration, t = music.currentTime - (S.clip ? S.clip.start || 0 : 0);
+      k.insertAdjacentHTML ('beforeend', '<div class="kp"><i style="width:' + (d ? Math.min (100, 100 * t / d) : 0).toFixed (1) + '%;background:' + (b.color || '#5cc8ff') + '"></i></div>');
+    }
+    k.onclick = () => { if (swallow) return; editing ? openEditor (i) : press (b); };
+    g.appendChild (k);
+  }
+  renderNow();
+}
+function renderSubs ()
+{
+  if (window.__moving) return;
+  const btns = config.pages[page].buttons, kids = $('grid').children;
+  for (let i = 0; i < kids.length; ++i)
+  {
+    const b = btns[i]; if (!b || b.type !== 'music.play') continue;
+    const s = kids[i].querySelector ('.sub'); if (s) s.textContent = subFor (b);
+    const bar = kids[i].querySelector ('.kp i');
+    if (bar) { const d = S.clip ? (S.clip.end - (S.clip.start || 0)) : music.duration, t = music.currentTime - (S.clip ? S.clip.start || 0 : 0); bar.style.width = (d ? Math.min (100, 100 * t / d) : 0).toFixed (1) + '%'; }
+  }
+}
+function renderNow ()
+{
+  $('nName').textContent = S.file ? S.file.replace (/\.[^.]+$/, '') : 'Sin música';
+  $('nMeta').textContent = S.file ? (S.playing ? '' : S.paused ? '⏸ En pausa · ' : '') + fmt (music.currentTime) + ' / ' + fmt (S.clip ? S.clip.end : music.duration) : '—';
+  $('prog').firstChild.style.width = (music.duration ? 100 * music.currentTime / music.duration : 0) + '%';
+  $('nPlay').textContent = S.playing ? '⏸' : '▶';
+}
+
+// ================================================================ editor de teclas
+function paramInput (key, label, kind, val)
+{
+  const row = document.createElement ('div'); row.className = 'row';
+  row.innerHTML = '<label></label>'; row.firstChild.textContent = label;
+  let el;
+  if (kind === 'music' || kind === 'vog')
+  {
+    el = document.createElement ('select');
+    const opts = lib[kind];
+    if (!opts.length) el.innerHTML = '<option value="">(primero importa archivos)</option>';
+    for (const o of opts) { const op = document.createElement ('option'); op.value = op.textContent = o.name; el.appendChild (op); }
+    if (val) el.value = val;
+  }
+  else if (kind === 'delay') { el = document.createElement ('select'); for (const d of [0, 2, 4, 6, 8, 10, 15, 20, 30]) { const o = document.createElement ('option'); o.value = d; o.textContent = d ? d + ' segundos' : 'Sin delay (inmediato)'; el.appendChild (o); } el.value = val ?? 0; }
+  else if (kind === 'bool') { el = document.createElement ('select'); el.innerHTML = '<option value="0">No</option><option value="1">Sí</option>'; el.value = val ? '1' : '0'; }
+  else if (kind === 'repress') { el = document.createElement ('select'); el.innerHTML = '<option value="pause">Pausar (sigue donde iba)</option><option value="stop">Detener (vuelve al inicio)</option>'; el.value = val || 'pause'; }
+  else if (kind === 'text') { el = document.createElement ('textarea'); el.rows = 3; el.value = val || ''; }
+  else { el = document.createElement ('input'); el.type = 'number'; el.step = 'any'; el.inputMode = 'decimal'; el.value = val ?? ''; }
+  el.dataset.key = key; el.dataset.kind = kind; row.appendChild (el);
+  return row;
+}
+function fillParams (type, b) { const box = $('fParams'); box.innerHTML = ''; for (const [k, l, kind] of TYPES[type].p) box.appendChild (paramInput (k, l, kind, b[k])); }
+function openEditor (i)
+{
+  editIdx = i;
+  const ex = config.pages[page].buttons[i];
+  const b = ex || { label: '', icon: '🎵', color: '#5cc8ff', type: 'music.play' };
+  $('dTitle').textContent = ex ? 'Editar tecla ' + (i + 1) : 'Nueva tecla ' + (i + 1);
+  $('fLabel').value = b.label || ''; $('fIcon').value = b.icon || ''; $('fColor').value = b.color || '#5cc8ff';
+  const sel = $('fType'); sel.innerHTML = '';
+  for (const [k, t] of Object.entries (TYPES)) { const o = document.createElement ('option'); o.value = k; o.textContent = t.name; sel.appendChild (o); }
+  sel.value = TYPES[b.type] ? b.type : 'music.play';
+  sel.onchange = () => fillParams (sel.value, b);
+  fillParams (sel.value, b);
+  $('fDel').style.display = ex ? '' : 'none';
+  $('dlg').showModal();
+}
+$('fCancel').onclick = () => $('dlg').close();
+$('fDel').onclick = () => { config.pages[page].buttons[editIdx] = null; save(); $('dlg').close(); render(); };
+$('fSave').onclick = () =>
+{
+  const b = { label: $('fLabel').value, icon: $('fIcon').value, color: $('fColor').value, type: $('fType').value };
+  for (const el of $('fParams').querySelectorAll ('[data-key]'))
+  {
+    const v = el.value, k = el.dataset.kind; if (v === '') continue;
+    b[el.dataset.key] = (k === 'num' || k === 'delay') ? Number (v) : k === 'bool' ? v === '1' : v;
+  }
+  if (!b.label && b.file) b.label = b.file.replace (/\.[^.]+$/, '').slice (0, 28);
+  const btns = config.pages[page].buttons; while (btns.length < editIdx) btns.push (null); btns[editIdx] = b;
+  save(); $('dlg').close(); render();
+};
+$('bEdit').onclick = () => { editing = !editing; document.body.classList.toggle ('editing', editing); $('bEdit').classList.toggle ('on', editing); $('bEdit').textContent = editing ? 'Listo' : 'Editar'; $('bGrid').style.display = editing ? '' : 'none'; render(); };
+const GRIDS = [[6, 4], [8, 3], [5, 3], [8, 4]];
+$('bGrid').onclick = () => { const { cols, rows } = gridSize(); const i = GRIDS.findIndex (([c, r]) => c === cols && r === rows); const [c, r] = GRIDS[(i + 1) % GRIDS.length]; config.grid = { cols: c, rows: r }; save(); render(); };
+
+// ================================================================ reordenar teclas (Editar: mantener y arrastrar)
+let drag = null, swallow = false;
+const grid = $('grid'), nav = $('pages');
+function targetAt (x, y)
+{
+  const el = document.elementFromPoint (x, y); if (!el) return null;
+  const k = el.closest ('#grid > .key'); if (k) return { kind: 'key', el: k, index: [...grid.children].indexOf (k) };
+  const t = el.closest ('#pages > button'); if (t) { const i = [...nav.children].indexOf (t); if (i >= 0 && i < config.pages.length) return { kind: 'page', el: t, index: i }; }
+  return null;
+}
+grid.addEventListener ('pointerdown', (e) => { if (!editing) return; const k = e.target.closest ('#grid > .key'); if (!k || k.classList.contains ('empty')) return; drag = { el: k, from: [...grid.children].indexOf (k), x0: e.clientX, y0: e.clientY, on: false, id: e.pointerId }; });
+window.addEventListener ('pointermove', (e) =>
+{
+  if (!drag || e.pointerId !== drag.id) return;
+  if (!drag.on)
+  {
+    if (Math.hypot (e.clientX - drag.x0, e.clientY - drag.y0) < 8) return;
+    drag.on = true; window.__moving = true;
+    const r = drag.el.getBoundingClientRect(); drag.dx = drag.x0 - r.left; drag.dy = drag.y0 - r.top;
+    drag.ghost = drag.el.cloneNode (true); drag.ghost.classList.add ('mv-ghost'); drag.ghost.style.width = r.width + 'px'; drag.ghost.style.height = r.height + 'px';
+    document.body.appendChild (drag.ghost); drag.el.classList.add ('mv-origin');
+  }
+  e.preventDefault();
+  drag.ghost.style.left = (e.clientX - drag.dx) + 'px'; drag.ghost.style.top = (e.clientY - drag.dy) + 'px';
+  document.querySelectorAll ('.mv-target').forEach (x => x.classList.remove ('mv-target'));
+  const t = targetAt (e.clientX, e.clientY);
+  if (t && !(t.kind === 'key' && t.index === drag.from) && !(t.kind === 'page' && t.index === page)) t.el.classList.add ('mv-target');
+}, { passive: false });
+function endDrag (e, cancel)
+{
+  if (!drag || e.pointerId !== drag.id) return;
+  const d = drag; drag = null; if (!d.on) return;
+  swallow = true; setTimeout (() => swallow = false, 60);
+  d.ghost.remove(); d.el.classList.remove ('mv-origin'); document.querySelectorAll ('.mv-target').forEach (x => x.classList.remove ('mv-target'));
+  window.__moving = false;
+  const t = cancel ? null : targetAt (e.clientX, e.clientY), btns = config.pages[page].buttons;
+  if (t && t.kind === 'key' && t.index !== d.from) { while (btns.length <= Math.max (t.index, d.from)) btns.push (null); const x = btns[t.index]; btns[t.index] = btns[d.from]; btns[d.from] = x; save(); }
+  else if (t && t.kind === 'page' && t.index !== page)
+  {
+    const dst = config.pages[t.index].buttons, { cols, rows } = gridSize();
+    let slot = dst.findIndex ((b, i) => !b && i < cols * rows); if (slot < 0) slot = dst.length < cols * rows ? dst.length : -1;
+    if (slot < 0) toast ('Esa página está llena'); else { while (dst.length <= slot) dst.push (null); dst[slot] = btns[d.from]; btns[d.from] = null; save(); }
+  }
+  render();
+}
+window.addEventListener ('pointerup', (e) => endDrag (e, false)); window.addEventListener ('pointercancel', (e) => endDrag (e, true));
+
+// ================================================================ importar y biblioteca
+$('bImport').onclick = () => { $('iStatus').textContent = ''; $('imp').showModal(); };
+$('iClose').onclick = () => $('imp').close();
+$('iPick').onclick = () => $('fileIn').click();
+$('fileIn').onchange = async () =>
+{
+  const files = [...$('fileIn').files], folder = $('iFolder').value;
+  let n = 0;
+  for (const f of files)
+  {
+    ++n; $('iStatus').textContent = 'Guardando ' + n + ' de ' + files.length + ': ' + f.name + '…';
+    try { await tx ('files', 'readwrite', s => s.put ({ id: folder + '/' + f.name, name: f.name, folder, size: f.size, blob: f })); }
+    catch (e) { $('iStatus').textContent = '⚠️ No se pudo guardar ' + f.name + ': ' + (e && e.message || e); }
+  }
+  $('fileIn').value = '';
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
+  await loadLib();
+  $('iStatus').textContent = '✅ ' + files.length + ' archivo(s) guardado(s). Ahora en Editar asígnalos a las teclas.';
+};
+async function openLib ()
+{
+  const box = $('libList'); box.innerHTML = '';
+  for (const [folder, title] of [['music', 'Música'], ['vog', 'Anuncios']])
+  {
+    if (!lib[folder].length) continue;
+    const h = document.createElement ('div'); h.className = 'hint'; h.textContent = title; box.appendChild (h);
+    for (const f of lib[folder])
+    {
+      const it = document.createElement ('div'); it.className = 'it';
+      it.innerHTML = '<span class="n"></span><span class="s">' + mb (f.size) + '</span><button class="hbtn danger" style="padding:6px 10px">Borrar</button>';
+      it.querySelector ('.n').textContent = f.name;
+      it.querySelector ('button').onclick = async () => { if (!confirm ('¿Borrar «' + f.name + '» de RF Showdeck?')) return; await tx ('files', 'readwrite', s => s.delete (f.id)); await loadLib(); openLib(); };
+      box.appendChild (it);
+    }
+  }
+  if (!box.children.length) box.innerHTML = '<p class="hint">Todavía no hay archivos. Usa «Importar».</p>';
+  try { const e = await navigator.storage.estimate(); $('lUse').textContent = 'Usando ' + mb (e.usage || 0) + ' de ' + mb (e.quota || 0) + ' disponibles.'; } catch { $('lUse').textContent = ''; }
+  if (!$('lib').open) $('lib').showModal();
+}
+$('bLib').onclick = openLib; $('lClose').onclick = () => $('lib').close();
+
+// ================================================================ barra inferior
+$('nPlay').onclick = () => press ({ type: 'music.toggle' });
+$('nStop').onclick = () => press ({ type: 'music.stop', fade: 1 });
+$('vol').oninput = () => { config.vol = +$('vol').value; if (S.playing) ramp (musicGain, level(), 0.05); save(); };
+
+// ================================================================ arranque
+(async () =>
+{
+  try { db = await idb(); } catch (e) { toast ('Este navegador no permite guardar datos: abre RF Showdeck desde la pantalla de inicio o en Safari normal (no privado).', 8000); return; }
+  config = (await kvGet ('config')) || JSON.parse (JSON.stringify (DEFAULT));
+  $('vol').value = config.vol ?? 0.8;
+  await loadLib();
+  render();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js').catch (() => {});
+})();
+</script>
+</body>
+</html>
