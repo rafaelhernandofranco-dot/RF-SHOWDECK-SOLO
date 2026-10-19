@@ -200,13 +200,13 @@ async function urlFor (name, folder)
   const f = await fileGet (folder + '/' + name);
   return f ? URL.createObjectURL (f.blob) : null;
 }
-async function musicPlay (b)
+async function musicPlay (b, key)
 {
   audioInit();
   const url = await urlFor (b.file, 'music');
   if (!url) { toast ('No encuentro «' + b.file + '» en la biblioteca'); return; }
   if (S.url) URL.revokeObjectURL (S.url);
-  S.url = url; S.file = b.file; S.paused = false; S.loop = !!b.loop; S.clip = (config.clips || {})[b.file] || null; S.fadeOutKey = b.fadeOut || 0;
+  S.url = url; S.file = b.file; S.key = key; S.paused = false; S.loop = !!b.loop; S.clip = (config.clips || {})[b.file] || null; S.fadeOutKey = b.fadeOut || 0;
   music.src = url; music.loop = S.loop && !S.clip;
   const startAt = S.clip ? S.clip.start || 0 : 0;
   music.addEventListener ('loadedmetadata', () => { if (startAt) try { music.currentTime = startAt; } catch {} }, { once: true });
@@ -275,26 +275,27 @@ const TYPES = {
   'tts': { name: 'Voice of God: voz sintética', p: [['text', 'Texto', 'text'], ['duck', 'Volumen de la música (0–1)', 'num']] },
   'vog.stop': { name: 'Voice of God: parar', p: [] }
 };
-function press (b)
+function press (b, kk)
 {
   audioInit();
+  const key = kk || ('file:' + b.file);
   switch (b.type)
   {
     case 'music.play':
     {
-      if (S.pending && S.pending.file === b.file) { cancelPending(); render(); return; }
-      if (S.file === b.file && S.playing) { cancelPending(); b.repress === 'stop' ? musicStop (b.fadeOut || 0) : musicPause (b.fadeOut || 0.3); return; }
-      if (S.file === b.file && S.paused && b.repress !== 'stop') { cancelPending(); musicResume(); return; }
+      if (S.pending && S.pending.key === key) { cancelPending(); render(); return; }
+      if (S.key === key && S.playing) { cancelPending(); b.repress === 'stop' ? musicStop (b.fadeOut || 0) : musicPause (b.fadeOut || 0.3); return; }
+      if (S.key === key && S.paused && b.repress !== 'stop') { cancelPending(); musicResume(); return; }
       cancelPending();
       const delay = Number (b.delay) || 0;
       if (delay > 0)
       {
         // desbloquear el reproductor dentro de este toque; arrancara al terminar la cuenta
         music.play().then (() => music.pause()).catch (() => {});
-        S.pending = { file: b.file, end: Date.now() + delay * 1000, timer: setTimeout (() => { S.pending = null; musicPlay (b); }, delay * 1000) };
+        S.pending = { file: b.file, key, end: Date.now() + delay * 1000, timer: setTimeout (() => { S.pending = null; musicPlay (b, key); }, delay * 1000) };
         render();
       }
-      else musicPlay (b);
+      else musicPlay (b, key);
       break;
     }
     case 'music.toggle': if (S.playing) musicPause(); else if (S.paused) musicResume(); else toast ('Primero toca una tecla de música'); break;
@@ -308,13 +309,13 @@ function press (b)
 
 // ================================================================ dibujo
 function gridSize () { return config.grid || { cols: 6, rows: 4 }; }
-function subFor (b)
+function subFor (b, kk)
 {
   if (b.type === 'music.play')
   {
-    if (S.pending && S.pending.file === b.file) return 'Inicia en ' + Math.ceil ((S.pending.end - Date.now()) / 1000) + ' s';
-    if (S.file === b.file && S.playing) return fmt (music.currentTime) + ' / ' + fmt (S.clip ? S.clip.end : music.duration);
-    if (S.file === b.file && S.paused) return '⏸ ' + fmt (music.currentTime);
+    if (S.pending && S.pending.key === kk) return 'Inicia en ' + Math.ceil ((S.pending.end - Date.now()) / 1000) + ' s';
+    if (S.key === kk && S.playing) return fmt (music.currentTime) + ' / ' + fmt (S.clip ? S.clip.end : music.duration);
+    if (S.key === kk && S.paused) return '⏸ ' + fmt (music.currentTime);
     return (b.delay ? '⏱ ' + b.delay + ' s ' : '') + (b.loop ? '↻' : '');
   }
   if (b.type === 'vog') return S.vogOn === b.file ? 'Sonando' : '';
@@ -345,21 +346,22 @@ function render ()
     const b = btns[i];
     const k = document.createElement ('div');
     if (!b) { k.className = 'key empty'; k.textContent = editing ? '+' : ''; k.onclick = () => editing && openEditor (i); g.appendChild (k); continue; }
-    const lit = (b.type === 'music.play' && S.file === b.file && S.playing) || (b.type === 'music.toggle' && S.playing) || (b.type === 'vog' && S.vogOn === b.file);
-    const paused = b.type === 'music.play' && S.file === b.file && S.paused;
-    const pend = b.type === 'music.play' && S.pending && S.pending.file === b.file;
+    const kk = page + ':' + i;
+    const lit = (b.type === 'music.play' && S.key === kk && S.playing) || (b.type === 'music.toggle' && S.playing) || (b.type === 'vog' && S.vogOn === b.file);
+    const paused = b.type === 'music.play' && S.key === kk && S.paused;
+    const pend = b.type === 'music.play' && S.pending && S.pending.key === kk;
     k.className = 'key' + (lit ? ' lit' : '') + (paused ? ' paused' : '') + (pend ? ' pending' : '');
     k.innerHTML = '<div class="bar"></div><div class="ico"></div><div class="lbl"></div><div class="sub"></div>';
     k.querySelector ('.bar').style.background = b.color || '#5cc8ff';
     k.querySelector ('.ico').textContent = b.icon || '🎵';
     k.querySelector ('.lbl').textContent = b.label || '';
-    k.querySelector ('.sub').textContent = subFor (b);
-    if (b.type === 'music.play' && S.file === b.file && (S.playing || S.paused))
+    k.querySelector ('.sub').textContent = subFor (b, kk);
+    if (b.type === 'music.play' && S.key === kk && (S.playing || S.paused))
     {
       const d = S.clip ? (S.clip.end - (S.clip.start || 0)) : music.duration, t = music.currentTime - (S.clip ? S.clip.start || 0 : 0);
       k.insertAdjacentHTML ('beforeend', '<div class="kp"><i style="width:' + (d ? Math.min (100, 100 * t / d) : 0).toFixed (1) + '%;background:' + (b.color || '#5cc8ff') + '"></i></div>');
     }
-    k.onclick = () => { if (swallow) return; editing ? openEditor (i) : press (b); };
+    k.onclick = () => { if (swallow) return; editing ? openEditor (i) : press (b, kk); };
     g.appendChild (k);
   }
   renderNow();
@@ -371,7 +373,7 @@ function renderSubs ()
   for (let i = 0; i < kids.length; ++i)
   {
     const b = btns[i]; if (!b || b.type !== 'music.play') continue;
-    const s = kids[i].querySelector ('.sub'); if (s) s.textContent = subFor (b);
+    const s = kids[i].querySelector ('.sub'); if (s) s.textContent = subFor (b, page + ':' + i);
     const bar = kids[i].querySelector ('.kp i');
     if (bar) { const d = S.clip ? (S.clip.end - (S.clip.start || 0)) : music.duration, t = music.currentTime - (S.clip ? S.clip.start || 0 : 0); bar.style.width = (d ? Math.min (100, 100 * t / d) : 0).toFixed (1) + '%'; }
   }
@@ -569,6 +571,6 @@ $('bReopen').onclick = () => location.reload();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=6"></script>
+<script src="clip.js?v=7"></script>
 </body>
 </html>
