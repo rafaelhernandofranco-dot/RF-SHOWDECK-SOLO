@@ -137,7 +137,7 @@
 
   // ---------- dibujo
   function width () { return Math.max (300, Math.round (scroller.clientWidth * (+$('ceZoom').value))); }
-  const X = (t) => (t / dur) * cv.width, T = (x) => (x / cv.width) * dur;
+  const PAD = 14, X = (t) => PAD + (t / dur) * (cv.width - 2 * PAD), T = (x) => Math.max (0, Math.min (dur, ((x - PAD) / (cv.width - 2 * PAD)) * dur));   // margen para ver las barras de los extremos
   function draw ()
   {
     const W = width(), H = 250; if (cv.width !== W) cv.width = W;
@@ -157,7 +157,7 @@
       g.fillRect (x, mid - h, 1.6, h * 2);
     }
     // zonas recortadas
-    g.fillStyle = 'rgba(5,8,12,.72)'; g.fillRect (0, 22, X (st.start), H); g.fillRect (X (st.end), 22, W, H);
+    g.fillStyle = 'rgba(5,8,12,.72)'; g.fillRect (0, 22, X (st.start), H); g.fillRect (X (st.end), 22, W - X (st.end), H);
     // curvas de fade
     g.strokeStyle = '#ffd166'; g.lineWidth = 2; g.beginPath();
     const top = 30, bot = H - 6;
@@ -165,9 +165,9 @@
     g.stroke();
     // tiradores
     g.fillStyle = '#ffd166';
-    for (const t of [st.start, st.end]) { g.fillRect (X (t) - 1, 22, 2, H); g.fillRect (X (t) - 6, mid - 14, 12, 28); }
-    g.fillRect (X (st.start + st.fadeIn) - 6, top - 6, 12, 12);
-    g.fillRect (X (st.end - st.fadeOut) - 6, top - 6, 12, 12);
+    for (const t of [st.start, st.end]) { g.fillRect (X (t) - 1.5, 22, 3, H); g.fillRect (X (t) - 8, mid - 22, 16, 44); }
+    g.fillRect (X (st.start + st.fadeIn) - 8, top - 8, 16, 16);
+    g.fillRect (X (st.end - st.fadeOut) - 8, top - 8, 16, 16);
     // cabezal
     const ph = play ? play.from + (actx.currentTime - play.t0) : head;
     g.fillStyle = '#5cc8ff'; g.fillRect (X (ph), 22, 2, H);
@@ -223,7 +223,7 @@
   {
     if (!st) return;
     const r = cv.getBoundingClientRect (), x = e.clientX - r.left, y = e.clientY - r.top;
-    const near = (t, tol = 12) => Math.abs (X (t) - x) < tol;
+    const near = (t, tol = 18) => Math.abs (X (t) - x) < tol;
     let kind = null;
     if (y < 48 && near (st.start + st.fadeIn)) kind = 'fi';
     else if (y < 48 && near (st.end - st.fadeOut)) kind = 'fo';
@@ -238,7 +238,7 @@
     const r = cv.getBoundingClientRect (), x = e.clientX - r.left, y = e.clientY - r.top, t = Math.max (0, Math.min (dur, T (x)));
     if (!drag)
     {
-      const near = (tt) => Math.abs (X (tt) - x) < 12;
+      const near = (tt) => Math.abs (X (tt) - x) < 18;
       cv.style.cursor = (y < 48 && (near (st.start + st.fadeIn) || near (st.end - st.fadeOut))) || near (st.start) || near (st.end) ? 'ew-resize' : 'crosshair';
       return;
     }
