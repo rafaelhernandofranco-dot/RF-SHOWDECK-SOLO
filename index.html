@@ -97,6 +97,7 @@
 </div>
 <input type="file" id="fileIn" accept="audio/*,.mp3,.m4a,.wav,.aac,.aif,.aiff" multiple hidden>
 <div id="toast"></div>
+<div id="linkBar" style="display:none;position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:85;background:#1d2c40;border:1px solid var(--line);border-radius:14px;padding:10px 12px;gap:12px;align-items:center;font-size:14px"><span>Abriendo Spotify… ¿No se abrió?</span><button class="hbtn primary" id="linkBarGo">Abrir el enlace</button><button class="hbtn" onclick="this.parentNode.style.display='none'">✕</button></div>
 <div id="closed" style="display:none;position:fixed;inset:0;z-index:90;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px">
   <div style="font-size:22px;font-weight:700">RF ShowDeck Solo está cerrado</div>
   <div style="color:var(--dim);max-width:420px">La música se detuvo y todo quedó guardado. Para salir, desliza hacia arriba desde el borde inferior.</div>
@@ -310,15 +311,23 @@ function press (b, kk)
 }
 
 // abrir un enlace (Spotify: directo en la app de Spotify)
+function tapLink (href, blank)
+{
+  const a = document.createElement ('a'); a.href = href; if (blank) { a.target = '_blank'; a.rel = 'noopener'; }
+  a.style.display = 'none'; document.body.appendChild (a); a.click(); setTimeout (() => a.remove(), 1000);
+}
 function openLink (url)
 {
   url = String (url || '').trim();
   if (!url) { toast ('Esta tecla no tiene enlace'); return; }
   if (S.playing) musicPause (1);
-  const m = url.match (/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|track|artist|episode|show)\/([A-Za-z0-9]+)/);
-  if (m) { location.href = 'spotify:' + m[1] + ':' + m[2]; setTimeout (() => { if (document.visibilityState === 'visible') window.open (url, '_blank'); }, 1800); return; }   // si no hay app de Spotify, abre la web
-  if (/^spotify:/.test (url)) { location.href = url; return; }
-  window.open (/^https?:/.test (url) ? url : 'https://' + url, '_blank');
+  const web = /^https?:/i.test (url) ? url : (/^spotify:/i.test (url) ? url : 'https://' + url);
+  const m = web.match (/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|track|artist|episode|show)\/([A-Za-z0-9]+)/);
+  const app = m ? 'spotify:' + m[1] + ':' + m[2] : (/^spotify:/i.test (web) ? web : null);
+  if (app) tapLink (app, false); else tapLink (web, true);
+  // plan B visible: si no se abrio la app, un toque en este boton abre el enlace en Safari
+  const bar = $('linkBar'); $('linkBarGo').onclick = () => { bar.style.display = 'none'; tapLink (/^spotify:/i.test (web) ? 'https://open.spotify.com/' + web.split (':').slice (1).join ('/') : web, true); };
+  bar.style.display = 'flex'; clearTimeout (openLink.t); openLink.t = setTimeout (() => bar.style.display = 'none', 8000);
 }
 
 // ================================================================ dibujo
@@ -587,6 +596,6 @@ $('bReopen').onclick = () => location.reload();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=9"></script>
+<script src="clip.js?v=10"></script>
 </body>
 </html>
