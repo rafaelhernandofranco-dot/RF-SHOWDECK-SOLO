@@ -85,6 +85,7 @@
   <button class="hbtn" id="bImport">Importar</button>
   <button class="hbtn" id="bLib">Biblioteca</button>
   <button class="hbtn" id="bEdit">Editar</button>
+  <button class="hbtn danger" id="bQuit" aria-label="Cerrar RF ShowDeck">⏻ Cerrar</button>
 </header>
 <nav id="pages"></nav>
 <div id="grid"></div>
@@ -96,6 +97,11 @@
 </div>
 <input type="file" id="fileIn" accept="audio/*,.mp3,.m4a,.wav,.aac,.aif,.aiff" multiple hidden>
 <div id="toast"></div>
+<div id="closed" style="display:none;position:fixed;inset:0;z-index:90;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px">
+  <div style="font-size:22px;font-weight:700">RF ShowDeck Solo está cerrado</div>
+  <div style="color:var(--dim);max-width:420px">La música se detuvo y todo quedó guardado. Para salir, desliza hacia arriba desde el borde inferior.</div>
+  <button class="hbtn primary" id="bReopen">Volver a abrir</button>
+</div>
 
 <dialog id="dlg">
   <h3 id="dTitle">Tecla</h3>
@@ -543,6 +549,15 @@ $('nPlay').onclick = () => press ({ type: 'music.toggle' });
 $('nStop').onclick = () => press ({ type: 'music.stop', fade: 1 });
 $('vol').oninput = () => { config.vol = +$('vol').value; if (S.playing) ramp (musicGain, level(), 0.05); save(); };
 
+// ================================================================ cerrar
+$('bQuit').onclick = () =>
+{
+  if (!confirm ('¿Cerrar RF ShowDeck Solo? Se detiene la música.')) return;
+  cancelPending(); if (S.playing) musicStop (1); vogStop();
+  setTimeout (() => { music.removeAttribute ('src'); music.load(); if (ctx) ctx.suspend(); $('closed').style.display = 'flex'; }, 1100);
+};
+$('bReopen').onclick = () => location.reload();
+
 // ================================================================ arranque
 (async () =>
 {
@@ -554,6 +569,6 @@ $('vol').oninput = () => { config.vol = +$('vol').value; if (S.playing) ramp (mu
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=4"></script>
+<script src="clip.js?v=5"></script>
 </body>
 </html>
