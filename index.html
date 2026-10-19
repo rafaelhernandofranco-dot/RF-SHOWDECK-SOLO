@@ -551,9 +551,9 @@ $('vol').oninput = () => { config.vol = +$('vol').value; if (S.playing) ramp (mu
   $('vol').value = config.vol ?? 0.8;
   await loadLib();
   render();
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js').catch (() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js"></script>
+<script src="clip.js?v=4"></script>
 </body>
 </html>
