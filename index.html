@@ -212,7 +212,7 @@ async function musicPlay (b)
   music.addEventListener ('loadedmetadata', () => { if (startAt) try { music.currentTime = startAt; } catch {} }, { once: true });
   ramp (musicGain, 0, 0);
   try { await music.play(); } catch (e) { toast ('Toca la pantalla una vez para activar el audio'); return; }
-  ramp (musicGain, level(), b.fadeIn || 0.02);
+  if (S.clip && S.clip.fadeIn > 0) S.fadeUntil = 0; else ramp (musicGain, level(), b.fadeIn || 0.02);   // con fade del editor, la curva la maneja el clip
   S.playing = true; render();
 }
 function musicPause (fade = 0.3) { ramp (musicGain, 0, fade); setTimeout (() => { music.pause(); }, fade * 1000 + 30); S.playing = false; S.paused = true; render(); }
@@ -258,7 +258,7 @@ setInterval (() =>
     let e = 1;
     if (c.fadeIn > 0 && t < c.start + c.fadeIn) e *= curve ((t - c.start) / c.fadeIn, c.inCurve);
     if (c.fadeOut > 0 && t > c.end - c.fadeOut) e *= curve ((c.end - t) / c.fadeOut, c.outCurve);
-    if (musicGain && Date.now() > (S.fadeUntil || 0)) musicGain.gain.value = level() * e;
+    if (musicGain && Date.now() > (S.fadeUntil || 0)) { const tt = ctx.currentTime; musicGain.gain.cancelScheduledValues (tt); musicGain.gain.setValueAtTime (level() * e, tt); }
     if (t >= c.end - 0.03) { if (S.loop) music.currentTime = c.start || 0; else { music.pause(); S.playing = false; render(); } }
   }
 }, 40);
@@ -569,6 +569,6 @@ $('bReopen').onclick = () => location.reload();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=5"></script>
+<script src="clip.js?v=6"></script>
 </body>
 </html>

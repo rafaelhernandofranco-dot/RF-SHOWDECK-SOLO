@@ -270,7 +270,7 @@
     if (!play) return;
     const t = play.from + (actx.currentTime - play.t0);
     if (t >= st.end) { head = st.start; stopSrc(); draw(); return; }
-    play.gain.gain.value = env (t) * Math.pow (10, st.gainDb / 20);
+    { const g2 = play.gain.gain, tt = actx.currentTime; g2.cancelScheduledValues (tt); g2.setValueAtTime (env (t) * Math.pow (10, st.gainDb / 20), tt); }
     $('ceTime').textContent = fmt (t);
     draw();
     requestAnimationFrame (tick);
