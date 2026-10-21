@@ -77,7 +77,7 @@
       <input type="range" id="ceG" min="-20" max="12" step="0.5" value="0" style="accent-color:#5cc8ff">
       <button class="hbtn" id="ceNorm">Normalizar (pico −1 dB)</button></div>
     <div class="ce-card"><h4>Cómo se usa</h4>
-      <span>Arrastra las barras <b style="color:#ffd166">amarillas</b> de los lados para recortar y los cuadritos de arriba para los fades. Toca la onda para escuchar desde ahí.</span>
+      <span>Arrastra las barras <b style="color:#ffd166">amarillas</b> para recortar, y los círculos <b style="color:#3ddc97">IN</b> y <b style="color:#ff9f43">OUT</b> hacia el centro para los fades. Toca la onda para escuchar desde ahí.</span>
       <span>El archivo original no se modifica.</span></div>
   </div>`;
   document.body.appendChild (ed);
@@ -137,7 +137,7 @@
 
   // ---------- dibujo
   function width () { return Math.max (300, Math.round (scroller.clientWidth * (+$('ceZoom').value))); }
-  const PAD = 14, X = (t) => PAD + (t / dur) * (cv.width - 2 * PAD), T = (x) => Math.max (0, Math.min (dur, ((x - PAD) / (cv.width - 2 * PAD)) * dur));   // margen para ver las barras de los extremos
+  const PAD = 18, FY = 44, X = (t) => PAD + (t / dur) * (cv.width - 2 * PAD), T = (x) => Math.max (0, Math.min (dur, ((x - PAD) / (cv.width - 2 * PAD)) * dur));   // margen para ver las barras de los extremos
   function draw ()
   {
     const W = width(), H = 250; if (cv.width !== W) cv.width = W;
@@ -160,14 +160,21 @@
     g.fillStyle = 'rgba(5,8,12,.72)'; g.fillRect (0, 22, X (st.start), H); g.fillRect (X (st.end), 22, W - X (st.end), H);
     // curvas de fade
     g.strokeStyle = '#ffd166'; g.lineWidth = 2; g.beginPath();
-    const top = 30, bot = H - 6;
+    const top = FY, bot = H - 6;
     for (let x = Math.floor (X (st.start)); x <= Math.ceil (X (st.end)); x += 2) { const y = bot - (bot - top) * env (T (x)); x === Math.floor (X (st.start)) ? g.moveTo (x, y) : g.lineTo (x, y); }
     g.stroke();
     // tiradores
     g.fillStyle = '#ffd166';
     for (const t of [st.start, st.end]) { g.fillRect (X (t) - 1.5, 22, 3, H); g.fillRect (X (t) - 8, mid - 22, 16, 44); }
-    g.fillRect (X (st.start + st.fadeIn) - 8, top - 8, 16, 16);
-    g.fillRect (X (st.end - st.fadeOut) - 8, top - 8, 16, 16);
+    // tiradores de fade: circulos grandes para el dedo (IN verde, OUT naranja)
+    for (const [t, col, txt] of [[st.start + st.fadeIn, '#3ddc97', 'IN'], [st.end - st.fadeOut, '#ff9f43', 'OUT']])
+    {
+      const cx = X (t);
+      g.fillStyle = col; g.globalAlpha = .35; g.fillRect (cx - 1, 22, 2, H); g.globalAlpha = 1;
+      g.beginPath(); g.arc (cx, FY, 15, 0, Math.PI * 2); g.fill();
+      g.lineWidth = 2; g.strokeStyle = '#0b1118'; g.stroke();
+      g.fillStyle = '#0b1118'; g.font = '700 10px system-ui'; g.textAlign = 'center'; g.fillText (txt, cx, FY + 3.5); g.textAlign = 'left';
+    }
     // cabezal
     const ph = play ? play.from + (actx.currentTime - play.t0) : head;
     g.fillStyle = '#5cc8ff'; g.fillRect (X (ph), 22, 2, H);
@@ -225,8 +232,8 @@
     const r = cv.getBoundingClientRect (), x = e.clientX - r.left, y = e.clientY - r.top;
     const near = (t, tol = 18) => Math.abs (X (t) - x) < tol;
     let kind = null;
-    if (y < 48 && near (st.start + st.fadeIn)) kind = 'fi';
-    else if (y < 48 && near (st.end - st.fadeOut)) kind = 'fo';
+    if (y < FY + 26 && near (st.start + st.fadeIn, 26)) kind = 'fi';
+    else if (y < FY + 26 && near (st.end - st.fadeOut, 26)) kind = 'fo';
     else if (near (st.start)) kind = 'start';
     else if (near (st.end)) kind = 'end';
     if (!kind) { head = Math.max (0, Math.min (dur, T (x))); if (play) start (head); draw(); return; }
@@ -239,13 +246,21 @@
     if (!drag)
     {
       const near = (tt) => Math.abs (X (tt) - x) < 18;
-      cv.style.cursor = (y < 48 && (near (st.start + st.fadeIn) || near (st.end - st.fadeOut))) || near (st.start) || near (st.end) ? 'ew-resize' : 'crosshair';
+      cv.style.cursor = (y < FY + 26 && (near (st.start + st.fadeIn) || near (st.end - st.fadeOut))) || near (st.start) || near (st.end) ? 'ew-resize' : 'crosshair';
       return;
     }
     if (drag === 'start') st.start = t; else if (drag === 'end') st.end = t;
     else if (drag === 'fi') st.fadeIn = t - st.start; else if (drag === 'fo') st.fadeOut = st.end - t;
     clampSt(); sync(); draw();
   });
+  // En el iPad, si el dedo cae sobre un tirador, evitar que la onda se desplace en vez de arrastrar
+  cv.addEventListener ('touchstart', (e) =>
+  {
+    if (!st || !e.touches[0]) return;
+    const r = cv.getBoundingClientRect (), x = e.touches[0].clientX - r.left, y = e.touches[0].clientY - r.top;
+    const near = (t, tol) => Math.abs (X (t) - x) < tol;
+    if ((y < FY + 26 && (near (st.start + st.fadeIn, 26) || near (st.end - st.fadeOut, 26))) || near (st.start, 18) || near (st.end, 18)) e.preventDefault();
+  }, { passive: false });
   const endDrag = () => { drag = null; };
   cv.addEventListener ('pointerup', endDrag); cv.addEventListener ('pointercancel', endDrag);
 
