@@ -70,7 +70,7 @@
   #libList .it .s { color:var(--dim); font-size:12px; }
   #rotate { display:none; position:fixed; inset:0; z-index:100; background:var(--bg); flex-direction:column; align-items:center; justify-content:center; gap:10px; }
   @media (orientation:portrait) and (max-width:820px) { #rotate { display:flex; } }
-  body.locked #bImport, body.locked #bLib, body.locked #bEdit, body.locked #bQuit, body.locked #bGrid { display:none !important; }
+  body.locked #bImport, body.locked #bLib, body.locked #bEdit, body.locked #bQuit, body.locked #bGrid, body.locked #bSkin { display:none !important; }
   body.locked #bLock { background:var(--amber); color:#111; border-color:var(--amber); }
   #pAwake.on { color:var(--green); border-color:#1f4d33; } #pAwake.off { color:var(--amber); border-color:#5a4a1c; }
   .stp { display:grid; grid-template-columns:150px 1fr auto; gap:6px; align-items:center; margin-bottom:6px; }
@@ -79,6 +79,10 @@
   .fl label { display:flex; align-items:center; gap:10px; padding:8px 10px; font-size:14px; color:var(--text) !important; border-bottom:1px solid rgba(255,255,255,.04); }
   .fl input { width:20px; height:20px; accent-color:var(--cyan); }
   .fl .ord { margin-left:auto; color:var(--cyan); font-weight:700; }
+  body.editing #bSkin { display:inline-block !important; }
+  .key .kimg { width:46%; max-width:64px; aspect-ratio:1; object-fit:cover; border-radius:10px; }
+  .key .hk { position:absolute; top:14px; right:10px; font-size:10px; font-weight:700; color:var(--dim); border:1px solid var(--line); border-radius:5px; padding:1px 5px; }
+  #pClock.tm { color:var(--amber) !important; border-color:#5a4a1c; } #pClock.tmEnd { color:#fff !important; background:#b3261e !important; border-color:#b3261e; animation:blink 1s infinite; }
   #toast { position:fixed; left:50%; bottom:90px; transform:translateX(-50%); background:#1d2c40; border:1px solid var(--line); color:var(--text); padding:10px 16px; border-radius:12px; font-size:14px; display:none; z-index:80; }
   @media (max-height:600px) { .key .ico { font-size:20px; } .key .lbl { font-size:11px; } .key .sub { display:none; } #grid { gap:7px; } }
 </style>
@@ -87,10 +91,12 @@
 <div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF Showdeck se usa en horizontal</div></div>
 <header>
   <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v15</span></div></div>
+    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v16</span></div></div>
   <span class="pill" id="pStore" style="display:none">—</span>
   <button class="pill" id="pAwake" style="background:transparent;cursor:pointer">☀︎ Pantalla…</button>
+  <button class="pill" id="pClock" style="background:transparent;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--text)">--:--</button>
   <div class="sp"></div>
+  <button class="hbtn" id="bSkin" style="display:none" aria-label="Apariencia">🎨</button>
   <button class="hbtn" id="bGrid" style="display:none">6 × 4</button>
   <button class="hbtn" id="bImport">Importar</button>
   <button class="hbtn" id="bLib">Biblioteca</button>
@@ -122,8 +128,13 @@
   <h3 id="dTitle">Tecla</h3>
   <div class="two"><div class="row"><label>Nombre</label><input id="fLabel"></div><div class="row"><label>Ícono (emoji)</label><input id="fIcon" maxlength="4"></div></div>
   <div class="two"><div class="row"><label>Color</label><input id="fColor" type="color" value="#5cc8ff" style="height:44px;padding:4px"></div><div class="row"><label>Acción</label><select id="fType"></select></div></div>
+  <div class="two">
+    <div class="row"><label>Imagen en la tecla (opcional)</label><div style="display:flex;gap:8px;align-items:center"><img id="fImgPrev" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;display:none"><button type="button" class="hbtn" id="fImg">Elegir imagen…</button><button type="button" class="hbtn" id="fImgDel" style="display:none">Quitar</button></div></div>
+    <div class="row"><label>Atajo (teclado o pedal Bluetooth)</label><div style="display:flex;gap:8px;align-items:center"><button type="button" class="hbtn" id="fHot">Asignar tecla…</button><button type="button" class="hbtn" id="fHotDel" style="display:none">Quitar</button></div></div>
+  </div>
+  <input type="file" id="imgIn" accept="image/*" hidden>
   <div id="fParams"></div>
-  <div class="actions"><button class="hbtn danger" id="fDel" style="margin-right:auto">Eliminar</button><button class="hbtn" id="fCancel">Cancelar</button><button class="hbtn primary" id="fSave">Guardar</button></div>
+  <div class="actions"><button class="hbtn danger" id="fDel" style="margin-right:auto">Eliminar</button><button class="hbtn" id="fDup">Duplicar</button><button class="hbtn" id="fCancel">Cancelar</button><button class="hbtn primary" id="fSave">Guardar</button></div>
 </dialog>
 
 <dialog id="imp">
@@ -160,6 +171,20 @@
   </div>
   <audio id="rPrev" controls style="width:100%;display:none"></audio>
   <div class="actions"><button class="hbtn" id="rClose">Cancelar</button><button class="hbtn primary" id="rSave" disabled>Guardar anuncio</button></div>
+</dialog>
+
+<dialog id="skin">
+  <h3>🎨 Apariencia</h3>
+  <div id="skinList" style="display:flex;flex-direction:column;gap:8px"></div>
+  <div class="actions"><button class="hbtn primary" id="skinOk">Listo</button></div>
+</dialog>
+
+<dialog id="timer">
+  <h3>⏱ Temporizador</h3>
+  <p class="hint" style="margin-top:-6px">Cuenta regresiva en la barra de arriba, por ejemplo para el tiempo de un discurso o un receso.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0" id="tmQuick"></div>
+  <div class="row"><label>Minutos (personalizado)</label><input id="tmMin" type="number" inputmode="decimal" min="0.5" step="0.5" placeholder="Ej: 12"></div>
+  <div class="actions"><button class="hbtn danger" id="tmStop" style="margin-right:auto">Quitar temporizador</button><button class="hbtn" id="tmClose">Cerrar</button><button class="hbtn primary" id="tmGo">Iniciar</button></div>
 </dialog>
 
 <dialog id="unlock">
@@ -230,7 +255,7 @@ function audioInit ()
 }
 document.addEventListener ('touchend', audioInit, { passive: true }); document.addEventListener ('click', audioInit);
 
-const level = () => (config ? config.vol : 0.8) * S.duck * (S.clip ? Math.pow (10, (S.clip.gainDb || 0) / 20) : 1);
+const level = () => (config ? config.vol : 0.8) * (S.keyVol ?? 1) * S.duck * (S.clip ? Math.pow (10, (S.clip.gainDb || 0) / 20) : 1);
 function ramp (g, to, sec)
 {
   if (!g) return; const t = ctx.currentTime; if (g === musicGain) S.fadeUntil = Date.now() + sec * 1000 + 50;
@@ -249,7 +274,7 @@ async function musicPlay (b, key)
   const url = await urlFor (b.file, 'music');
   if (!url) { toast ('No encuentro «' + b.file + '» en la biblioteca'); return; }
   if (S.url) URL.revokeObjectURL (S.url);
-  S.url = url; S.file = b.file; S.key = key; S.paused = false; S.loop = !!b.loop; S.clip = (config.clips || {})[b.file] || null; S.fadeOutKey = b.fadeOut || 0;
+  S.url = url; S.file = b.file; S.key = key; S.keyVol = (b.vol ?? 100) / 100; S.paused = false; S.loop = !!b.loop; S.clip = (config.clips || {})[b.file] || null; S.fadeOutKey = b.fadeOut || 0;
   music.src = url; music.loop = S.loop && !S.clip;
   const startAt = S.clip ? S.clip.start || 0 : 0;
   music.addEventListener ('loadedmetadata', () => { if (startAt) try { music.currentTime = startAt; } catch {} }, { once: true });
@@ -268,7 +293,7 @@ async function vogPlay (b)
   audioInit();
   const url = await urlFor (b.file, 'vog'); if (!url) { toast ('No encuentro el anuncio «' + b.file + '»'); return; }
   if (S.vurl) URL.revokeObjectURL (S.vurl);
-  S.vurl = url; vog.src = url; vogGain.gain.value = 1;
+  S.vurl = url; vog.src = url; vogGain.gain.value = Math.max (0, (b.vol ?? 100) / 100);
   duck (b.duck ?? 0.2);
   S.vogOn = b.file;
   vog.play().catch (() => toast ('Toca la pantalla una vez para activar el audio'));
@@ -284,7 +309,8 @@ function tts (b)
   if (!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance (b.text || '');
-  const v = speechSynthesis.getVoices().find (v => v.lang && v.lang.toLowerCase().startsWith (b.lang || 'es'));
+  const vs = speechSynthesis.getVoices();
+  const v = (b.voice && vs.find (x => x.name === b.voice)) || vs.find (v => v.lang && v.lang.toLowerCase().startsWith (b.lang || 'es'));
   if (v) u.voice = v; u.lang = v ? v.lang : (b.lang || 'es'); u.rate = 0.95;
   u.onstart = () => duck (b.duck ?? 0.2); u.onend = unduck; u.onerror = unduck;
   speechSynthesis.speak (u);
@@ -310,15 +336,15 @@ setInterval (() => { if (S.playing || S.pending) { renderNow(); renderSubs(); } 
 
 // ================================================================ acciones de teclas
 const TYPES = {
-  'music.play': { name: 'Música: tecla (pulsar = suena, otra vez = pausa)', p: [['file', 'Canción', 'music'], ['delay', 'Delay antes de sonar', 'delay'], ['fadeIn', 'Fade in (s)', 'num'], ['fadeOut', 'Fade out al pausar (s)', 'num'], ['loop', 'Repetir en bucle', 'bool'], ['repress', 'Al pulsar otra vez', 'repress']] },
+  'music.play': { name: 'Música: tecla (pulsar = suena, otra vez = pausa)', p: [['file', 'Canción', 'music'], ['delay', 'Delay antes de sonar', 'delay'], ['fadeIn', 'Fade in (s)', 'num'], ['fadeOut', 'Fade out al pausar (s)', 'num'], ['loop', 'Repetir en bucle', 'bool'], ['repress', 'Al pulsar otra vez', 'repress'], ['vol', 'Volumen de esta tecla (%)', 'vol']] },
   'music.toggle': { name: 'Música: play / pausa general', p: [] },
   'music.stop': { name: 'Música: detener', p: [['fade', 'Fade (s)', 'num']] },
   'music.fadeout': { name: 'Música: fade out', p: [['seconds', 'Segundos', 'num']] },
-  'vog': { name: 'Voice of God: anuncio grabado', p: [['file', 'Anuncio', 'vog'], ['duck', 'Volumen de la música durante el anuncio (0–1)', 'num']] },
-  'tts': { name: 'Voice of God: voz sintética', p: [['text', 'Texto', 'text'], ['duck', 'Volumen de la música (0–1)', 'num']] },
+  'vog': { name: 'Voice of God: anuncio grabado', p: [['file', 'Anuncio', 'vog'], ['vol', 'Volumen del anuncio (%)', 'vol'], ['duck', 'Volumen de la música durante el anuncio (0–1)', 'num']] },
+  'tts': { name: 'Voice of God: voz sintética', p: [['text', 'Texto', 'text'], ['voice', 'Voz', 'voice'], ['duck', 'Volumen de la música (0–1)', 'num']] },
   'vog.stop': { name: 'Voice of God: parar', p: [] },
   'link': { name: 'Spotify / enlace: abrir (lista o canción)', p: [['url', 'Enlace (pega el link de Spotify que te mandaron)', 'text']] },
-  'music.playlist': { name: 'Música: lista (varias canciones seguidas)', p: [['files', 'Canciones (tócalas en el orden en que deben sonar)', 'files'], ['fadeIn', 'Fade in (s)', 'num'], ['loop', 'Repetir la lista al terminar', 'bool']] },
+  'music.playlist': { name: 'Música: lista (varias canciones seguidas)', p: [['files', 'Canciones (tócalas en el orden en que deben sonar)', 'files'], ['fadeIn', 'Fade in (s)', 'num'], ['loop', 'Repetir la lista al terminar', 'bool'], ['vol', 'Volumen de la lista (%)', 'vol']] },
   'macro': { name: 'Macro: varias acciones en secuencia', p: [['steps', 'Pasos (se ejecutan en orden)', 'steps']] },
   'panic': { name: 'Parar todo (pánico)', p: [] }
 };
@@ -370,15 +396,15 @@ function playlistStart (b, key)
   const files = (b.files || []).filter (f => lib.music.some (x => x.name === f));
   if (!files.length) { toast ('Esta lista no tiene canciones (edita la tecla)'); return; }
   cancelPending();
-  S.queue = files; S.qi = 0; S.qloop = !!b.loop; S.qkey = key; S.qfade = b.fadeIn || 0;
-  musicPlay ({ file: files[0], fadeIn: S.qfade }, key);
+  S.queue = files; S.qi = 0; S.qloop = !!b.loop; S.qkey = key; S.qfade = b.fadeIn || 0; S.qvol = b.vol;
+  musicPlay ({ file: files[0], fadeIn: S.qfade, vol: S.qvol }, key);
 }
 function queueGo (i)
 {
   if (!S.queue) return false;
   if (i >= S.queue.length) { if (S.qloop) i = 0; else { S.queue = null; S.playing = false; S.paused = false; render(); return true; } }
   if (i < 0) i = 0;
-  S.qi = i; musicPlay ({ file: S.queue[i], fadeIn: 0.05 }, S.qkey);
+  S.qi = i; musicPlay ({ file: S.queue[i], fadeIn: 0.05, vol: S.qvol }, S.qkey);
   return true;
 }
 function trackEnded () { if (S.queue && S.key === S.qkey) queueGo (S.qi + 1); }
@@ -504,7 +530,8 @@ function render ()
     k.className = 'key' + (lit ? ' lit' : '') + (paused ? ' paused' : '') + (pend ? ' pending' : '');
     k.innerHTML = '<div class="bar"></div><div class="ico"></div><div class="lbl"></div><div class="sub"></div>';
     k.querySelector ('.bar').style.background = b.color || '#5cc8ff';
-    k.querySelector ('.ico').textContent = b.icon || '🎵';
+    if (b.img) { const im = document.createElement ('img'); im.className = 'kimg'; im.src = b.img; im.alt = ''; k.querySelector ('.ico').replaceWith (im); } else k.querySelector ('.ico').textContent = b.icon || '🎵';
+    if (b.hotkey) k.insertAdjacentHTML ('beforeend', '<span class="hk"></span>'), k.querySelector ('.hk').textContent = hotName (b.hotkey);
     k.querySelector ('.lbl').textContent = b.label || '';
     k.querySelector ('.sub').textContent = subFor (b, kk);
     if (b.type === 'music.play' && S.key === kk && (S.playing || S.paused))
@@ -559,6 +586,29 @@ function paramInput (key, label, kind, val)
   else if (kind === 'bool') { el = document.createElement ('select'); el.innerHTML = '<option value="0">No</option><option value="1">Sí</option>'; el.value = val ? '1' : '0'; }
   else if (kind === 'repress') { el = document.createElement ('select'); el.innerHTML = '<option value="pause">Pausar (sigue donde iba)</option><option value="stop">Detener (vuelve al inicio)</option>'; el.value = val || 'pause'; }
   else if (kind === 'text') { el = document.createElement ('textarea'); el.rows = 3; el.value = val || ''; }
+  else if (kind === 'vol')
+  {
+    el = document.createElement ('input'); el.type = 'range'; el.min = 0; el.max = 150; el.step = 5; el.value = val ?? 100;
+    const out = document.createElement ('span'); out.style.cssText = 'font-weight:700;margin-left:8px';
+    const upd = () => { out.textContent = el.value + ' %'; }; el.oninput = upd; upd();
+    row.firstChild.appendChild (out);
+    el.dataset.key = key; el.dataset.kind = 'num'; row.appendChild (el); return row;
+  }
+  else if (kind === 'voice')
+  {
+    el = document.createElement ('select');
+    const fill = () =>
+    {
+      const vs = speechSynthesis.getVoices().filter (x => /^es/i.test (x.lang));
+      el.innerHTML = '<option value="">Automática (español)</option>' + vs.map (x => '<option></option>').join ('');
+      vs.forEach ((x, i) => { const o = el.options[i + 1]; o.value = x.name; o.textContent = x.name + ' · ' + x.lang; });
+      if (val) el.value = val;
+    };
+    fill(); if (!el.options.length || el.options.length < 2) speechSynthesis.onvoiceschanged = fill;
+    const t = document.createElement ('button'); t.type = 'button'; t.className = 'hbtn'; t.textContent = '▶ Probar voz'; t.style.marginTop = '6px';
+    t.onclick = () => { const txt = ($('fParams').querySelector ('[data-key="text"]') || {}).value || 'Prueba de voz de RF ShowDeck'; tts ({ text: txt, voice: el.value, duck: 1 }); };
+    setTimeout (() => row.appendChild (t));
+  }
   else if (kind === 'files' || kind === 'steps')
   {
     el = document.createElement ('input'); el.type = 'hidden';
@@ -642,6 +692,13 @@ function stepsUI (hidden)
   return box;
 }
 function fillParams (type, b) { const box = $('fParams'); box.innerHTML = ''; for (const [k, l, kind] of TYPES[type].p) box.appendChild (paramInput (k, l, kind, b[k])); }
+let editImg = null, editHot = null, hotWait = false;
+function showImgHot ()
+{
+  $('fImgPrev').style.display = editImg ? '' : 'none'; if (editImg) $('fImgPrev').src = editImg; $('fImgDel').style.display = editImg ? '' : 'none';
+  $('fHot').textContent = hotWait ? 'Presiona una tecla…' : editHot ? 'Atajo: ' + hotName (editHot) : 'Asignar tecla…'; $('fHotDel').style.display = editHot ? '' : 'none';
+}
+const hotName = (k) => ({ ' ': 'Espacio', ArrowRight: '→', ArrowLeft: '←', ArrowUp: '↑', ArrowDown: '↓', PageDown: 'Av Pág', PageUp: 'Re Pág', Enter: 'Enter' })[k] || (k.length === 1 ? k.toUpperCase() : k);
 function openEditor (i)
 {
   editIdx = i;
@@ -654,10 +711,35 @@ function openEditor (i)
   sel.value = TYPES[b.type] ? b.type : 'music.play';
   sel.onchange = () => fillParams (sel.value, b);
   fillParams (sel.value, b);
-  $('fDel').style.display = ex ? '' : 'none';
+  $('fDel').style.display = ex ? '' : 'none'; $('fDup').style.display = ex ? '' : 'none';
+  editImg = b.img || null; editHot = b.hotkey || null; hotWait = false; showImgHot();
   $('dlg').showModal();
 }
-$('fCancel').onclick = () => $('dlg').close();
+$('fCancel').onclick = () => { hotWait = false; $('dlg').close(); };
+$('fImg').onclick = () => $('imgIn').click();
+$('fImgDel').onclick = () => { editImg = null; showImgHot(); };
+$('imgIn').onchange = () =>
+{
+  const f = $('imgIn').files[0]; $('imgIn').value = ''; if (!f) return;
+  const im = new Image(); im.onload = () =>
+  {
+    const c = document.createElement ('canvas'), s = 160, k = Math.max (s / im.width, s / im.height);
+    c.width = c.height = s; const g = c.getContext ('2d');
+    g.drawImage (im, (s - im.width * k) / 2, (s - im.height * k) / 2, im.width * k, im.height * k);
+    editImg = c.toDataURL ('image/jpeg', 0.85); URL.revokeObjectURL (im.src); showImgHot();
+  };
+  im.src = URL.createObjectURL (f);
+};
+$('fHot').onclick = () => { hotWait = true; showImgHot(); };
+$('fHotDel').onclick = () => { editHot = null; hotWait = false; showImgHot(); };
+$('fDup').onclick = () =>
+{
+  const btns = config.pages[page].buttons, src = btns[editIdx]; if (!src) return;
+  const { cols, rows } = gridSize(); let slot = -1; for (let i = 0; i < cols * rows; ++i) if (!btns[i]) { slot = i; break; }
+  if (slot < 0) { toast ('No hay espacio libre en esta página'); return; }
+  const copy = JSON.parse (JSON.stringify (src)); delete copy.hotkey; copy.label = (copy.label || '') + ' (copia)';
+  while (btns.length <= slot) btns.push (null); btns[slot] = copy; save(); $('dlg').close(); render(); toast ('Tecla duplicada');
+};
 $('fDel').onclick = () => { config.pages[page].buttons[editIdx] = null; save(); $('dlg').close(); render(); };
 $('fSave').onclick = () =>
 {
@@ -667,6 +749,7 @@ $('fSave').onclick = () =>
     const v = el.value, k = el.dataset.kind; if (v === '') continue;
     b[el.dataset.key] = (k === 'num' || k === 'delay') ? Number (v) : k === 'bool' ? v === '1' : k === 'json' ? JSON.parse (v) : v;
   }
+  if (editImg) b.img = editImg; if (editHot) b.hotkey = editHot;
   if (!b.label && b.file) b.label = b.file.replace (/\.[^.]+$/, '').slice (0, 28);
   if (b.type === 'link' && (!b.icon || b.icon === '🎵')) b.icon = '🟢';
   if (b.type === 'link' && !b.label) b.label = 'Spotify';
@@ -675,7 +758,7 @@ $('fSave').onclick = () =>
   const btns = config.pages[page].buttons; while (btns.length < editIdx) btns.push (null); btns[editIdx] = b;
   save(); $('dlg').close(); render();
 };
-$('bEdit').onclick = () => { editing = !editing; document.body.classList.toggle ('editing', editing); $('bEdit').classList.toggle ('on', editing); $('bEdit').textContent = editing ? 'Listo' : 'Editar'; $('bGrid').style.display = editing ? '' : 'none'; render(); };
+$('bEdit').onclick = () => { editing = !editing; document.body.classList.toggle ('editing', editing); $('bEdit').classList.toggle ('on', editing); $('bEdit').textContent = editing ? 'Listo' : 'Editar'; $('bGrid').style.display = editing ? '' : 'none'; $('bSkin').style.display = editing ? '' : 'none'; render(); };
 const GRIDS = [[6, 4], [8, 3], [5, 3], [8, 4]];
 $('bGrid').onclick = () => { const { cols, rows } = gridSize(); const i = GRIDS.findIndex (([c, r]) => c === cols && r === rows); const [c, r] = GRIDS[(i + 1) % GRIDS.length]; config.grid = { cols: c, rows: r }; save(); render(); };
 
@@ -913,6 +996,81 @@ $('rSave').onclick = async () =>
   $('rec').close(); toast ('✅ Anuncio guardado' + (slot >= 0 ? ' y tecla creada' : ''));
 };
 
+// ================================================================ pieles
+const SKINS = {
+  noche:   { name: 'Noche',       bg: '#0b1118', panel: '#141e2b', panel2: '#1a2636', line: '#2a3a52', key: '#253650', text: '#d8e2f0', dim: '#8aa0bd', acc: '#5cc8ff', acc2: '#ffd166', on: '#0b1118', bar: '#121b27' },
+  negro:   { name: 'Negro total', bg: '#000000', panel: '#0e0e10', panel2: '#17171a', line: '#2a2a30', key: '#26262b', text: '#f2f2f4', dim: '#8e8e96', acc: '#19e3c8', acc2: '#ff5c7c', on: '#001a16', bar: '#0b0b0d' },
+  grafito: { name: 'Grafito',     bg: '#19191b', panel: '#232326', panel2: '#2c2c30', line: '#3b3b41', key: '#3b3b41', text: '#efeff1', dim: '#a3a3aa', acc: '#ff9f1c', acc2: '#4dd0e1', on: '#1d1100', bar: '#202023' },
+  vino:    { name: 'Vino',        bg: '#1a0c12', panel: '#27131c', panel2: '#311823', line: '#4b2333', key: '#4b2333', text: '#f6eaee', dim: '#bf97a3', acc: '#e9b44c', acc2: '#ff7096', on: '#1e1300', bar: '#21101a' },
+  dia:     { name: 'Día',         bg: '#e9eef4', panel: '#ffffff', panel2: '#f4f7fa', line: '#c9d3df', key: '#c9d3df', text: '#132031', dim: '#566a82', acc: '#0a7fd0', acc2: '#c26a00', on: '#ffffff', bar: '#ffffff' }
+};
+const skinStyle = document.createElement ('style'); document.head.appendChild (skinStyle);
+function applySkin (id)
+{
+  const s = SKINS[id] || SKINS.noche;
+  skinStyle.textContent = `:root{--bg:${s.bg};--panel:${s.panel};--panel2:${s.panel2};--line:${s.line};--text:${s.text};--dim:${s.dim};--cyan:${s.acc};--amber:${s.acc2}}
+    html,body{background:var(--bg)!important;color:var(--text)}
+    .key{border-color:${s.key}!important} .key .lbl{color:var(--text)!important} .key.empty{border-color:${s.line}!important;background:transparent!important}
+    .key.lit{background:${s.panel2}!important;border-color:var(--cyan)!important} #now{background:${s.bar}!important;border-color:${s.line}!important}
+    nav button.cur,.primary,.tbtn.pri{color:${s.on}!important} .logo .name b{color:var(--text)} #nName{color:var(--text)!important}
+    .logo svg text{fill:var(--text)} .logo svg polygon{stroke:var(--cyan)} #prog,.key .kp{background:${s.line}!important} #toast{background:${s.panel2};color:var(--text)}`;
+  const m = document.querySelector ('meta[name=theme-color]'); if (m) m.content = s.bg;
+}
+$('bSkin').onclick = () =>
+{
+  const box = $('skinList'); box.innerHTML = '';
+  for (const [id, s] of Object.entries (SKINS))
+  {
+    const b = document.createElement ('button'); b.className = 'hbtn';
+    b.style.cssText = 'display:flex;align-items:center;gap:12px;text-align:left;padding:10px 12px;' + ((config.skin || 'noche') === id ? 'border:2px solid var(--cyan)' : '');
+    b.innerHTML = `<span style="width:64px;height:40px;flex:none;border-radius:8px;background:${s.bg};border:1px solid ${s.line};display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:5px;box-sizing:border-box"><i style="background:${s.acc};border-radius:3px"></i><i style="background:${s.panel2};border-radius:3px"></i><i style="background:${s.panel2};border-radius:3px"></i><i style="background:${s.acc2};border-radius:3px"></i></span><b style="font-size:15px">${s.name}</b>` + ((config.skin || 'noche') === id ? '<span style="margin-left:auto;color:var(--cyan)">✓</span>' : '');
+    b.onclick = () => { config.skin = id; save(); applySkin (id); $('bSkin').onclick(); };
+    box.appendChild (b);
+  }
+  if (!$('skin').open) $('skin').showModal();
+};
+$('skinOk').onclick = () => $('skin').close();
+
+// ================================================================ reloj y temporizador
+let tmEnd = 0;
+function clockTick ()
+{
+  const p = $('pClock');
+  if (tmEnd)
+  {
+    const r = Math.ceil ((tmEnd - Date.now()) / 1000);
+    if (r > 0) { p.className = 'pill tm'; p.textContent = '⏱ ' + Math.floor (r / 60) + ':' + String (r % 60).padStart (2, '0'); return; }
+    p.className = 'pill tmEnd'; p.textContent = '⏱ ¡Tiempo!'; return;
+  }
+  p.className = 'pill'; p.textContent = new Date().toLocaleTimeString ([], { hour: '2-digit', minute: '2-digit' });
+}
+setInterval (clockTick, 500);
+$('pClock').onclick = () =>
+{
+  const q = $('tmQuick'); q.innerHTML = '';
+  for (const m of [1, 3, 5, 10, 15, 20, 30]) { const b = document.createElement ('button'); b.className = 'hbtn'; b.textContent = m + ' min'; b.onclick = () => { tmEnd = Date.now() + m * 60000; $('timer').close(); clockTick(); }; q.appendChild (b); }
+  $('timer').showModal();
+};
+$('tmGo').onclick = () => { const m = Number ($('tmMin').value); if (m > 0) { tmEnd = Date.now() + m * 60000; $('timer').close(); clockTick(); } };
+$('tmStop').onclick = () => { tmEnd = 0; $('timer').close(); clockTick(); };
+$('tmClose').onclick = () => $('timer').close();
+
+// ================================================================ atajos de teclado / pedal Bluetooth
+document.addEventListener ('keydown', (e) =>
+{
+  if (hotWait && $('dlg').open) { e.preventDefault(); editHot = e.key; hotWait = false; showImgHot(); return; }
+  if (e.target && /INPUT|TEXTAREA|SELECT/.test (e.target.tagName)) return;
+  if (document.querySelector ('dialog[open]')) return;
+  for (let pi = 0; pi < config.pages.length; ++pi)
+  {
+    const btns = config.pages[pi].buttons;
+    for (let i = 0; i < btns.length; ++i)
+      if (btns[i] && btns[i].hotkey === e.key) { e.preventDefault(); if (btns[i].type === 'link') openLink (btns[i].url); else press (btns[i], pi + ':' + i); return; }
+  }
+  if (e.key === ' ') { e.preventDefault(); press ({ type: 'music.toggle' }); }
+  else if (e.key === 'Escape') panic();
+});
+
 // ================================================================ cerrar
 $('bQuit').onclick = () =>
 {
@@ -929,12 +1087,13 @@ $('bReopen').onclick = () => location.reload();
   config = (await kvGet ('config')) || JSON.parse (JSON.stringify (DEFAULT));
   $('vol').value = config.vol ?? 0.8;
   await loadLib();
+  applySkin (config.skin || 'noche');
   document.body.classList.toggle ('locked', !!config.locked); $('bLock').textContent = config.locked ? '🔒 Modo show' : '🔓';
   render();
   keepAwake();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=15"></script>
+<script src="clip.js?v=16"></script>
 </body>
 </html>
