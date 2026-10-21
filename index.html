@@ -87,7 +87,7 @@
 <div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF Showdeck se usa en horizontal</div></div>
 <header>
   <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v13</span></div></div>
+    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v14</span></div></div>
   <span class="pill" id="pStore" style="display:none">—</span>
   <button class="pill" id="pAwake" style="background:transparent;cursor:pointer">☀︎ Pantalla…</button>
   <div class="sp"></div>
@@ -550,6 +550,10 @@ function paramInput (key, label, kind, val)
     if (!opts.length) el.innerHTML = '<option value="">(primero importa archivos)</option>';
     for (const o of opts) { const op = document.createElement ('option'); op.value = op.textContent = o.name; el.appendChild (op); }
     if (val) el.value = val;
+    const sel = el;
+    const ib = importBtn (kind, (names) => { sel.innerHTML = ''; for (const o of lib[kind]) { const op = document.createElement ('option'); op.value = op.textContent = o.name; sel.appendChild (op); } if (names[0]) sel.value = names[0]; });
+    ib.style.marginTop = '6px';
+    setTimeout (() => row.appendChild (ib));
   }
   else if (kind === 'delay') { el = document.createElement ('select'); for (const d of [0, 2, 4, 6, 8, 10, 15, 20, 30]) { const o = document.createElement ('option'); o.value = d; o.textContent = d ? d + ' segundos' : 'Sin delay (inmediato)'; el.appendChild (o); } el.value = val ?? 0; }
   else if (kind === 'bool') { el = document.createElement ('select'); el.innerHTML = '<option value="0">No</option><option value="1">Sí</option>'; el.value = val ? '1' : '0'; }
@@ -567,6 +571,13 @@ function paramInput (key, label, kind, val)
   else { el = document.createElement ('input'); el.type = 'number'; el.step = 'any'; el.inputMode = 'decimal'; el.value = val ?? ''; }
   el.dataset.key = key; el.dataset.kind = kind; row.appendChild (el);
   return row;
+}
+function importBtn (folder, after)
+{
+  const b = document.createElement ('button'); b.type = 'button'; b.className = 'hbtn'; b.style.padding = '8px 10px'; b.style.whiteSpace = 'nowrap';
+  b.textContent = folder === 'vog' ? '+ Importar anuncio' : '+ Importar canción';
+  b.onclick = () => importInline (folder, after);
+  return b;
 }
 function filesUI (hidden)
 {
@@ -586,7 +597,10 @@ function filesUI (hidden)
     }
   };
   draw();
-  return box;
+  const wrap = document.createElement ('div'); wrap.appendChild (box);
+  const ib = importBtn ('music', (names) => { for (const n of names) if (!sel.includes (n)) sel.push (n); hidden.value = JSON.stringify (sel); draw(); });
+  ib.style.marginTop = '6px'; wrap.appendChild (ib);
+  return wrap;
 }
 const STEP_T = { fadeout: 'Fade out de la música', stop: 'Detener la música', play: 'Reproducir canción', vog: 'Anuncio grabado', tts: 'Voz sintética', wait: 'Esperar', vogstop: 'Parar anuncio' };
 function stepsUI (hidden)
@@ -607,11 +621,11 @@ function stepsUI (hidden)
       r.appendChild (t);
       const p = document.createElement ('div'); p.style.display = 'flex'; p.style.gap = '6px';
       const num = (ph, key) => { const n = document.createElement ('input'); n.type = 'number'; n.step = 'any'; n.inputMode = 'decimal'; n.placeholder = ph; n.value = s[key] ?? ''; n.oninput = () => { s[key] = n.value; sync(); }; return n; };
-      const pick = (list) => { const x = document.createElement ('select'); if (!list.length) x.innerHTML = '<option value="">(importa primero)</option>'; for (const f of list) { const o = document.createElement ('option'); o.value = o.textContent = f.name; x.appendChild (o); } if (s.file) x.value = s.file; else s.file = x.value; x.onchange = () => { s.file = x.value; sync(); }; return x; };
+      const pick = (list, folder) => { const x = document.createElement ('select'); if (!list.length) x.innerHTML = '<option value="">(importa primero)</option>'; for (const f of list) { const o = document.createElement ('option'); o.value = o.textContent = f.name; x.appendChild (o); } if (s.file) x.value = s.file; else s.file = x.value; x.onchange = () => { s.file = x.value; sync(); }; return x; };
       if (s.t === 'fadeout') p.appendChild (num ('segundos (3)', 'sec'));
       else if (s.t === 'wait') p.appendChild (num ('segundos', 'sec'));
-      else if (s.t === 'play') { p.appendChild (pick (lib.music)); p.appendChild (num ('fade in s', 'sec')); }
-      else if (s.t === 'vog') p.appendChild (pick (lib.vog));
+      else if (s.t === 'play') { p.appendChild (pick (lib.music)); p.appendChild (num ('fade in s', 'sec')); p.appendChild (importBtn ('music', (names) => { if (names[0]) s.file = names[0]; sync(); draw(); })); }
+      else if (s.t === 'vog') { p.appendChild (pick (lib.vog)); p.appendChild (importBtn ('vog', (names) => { if (names[0]) s.file = names[0]; sync(); draw(); })); }
       else if (s.t === 'tts') { const x = document.createElement ('input'); x.placeholder = 'Texto del anuncio'; x.value = s.text || ''; x.oninput = () => { s.text = x.value; sync(); }; p.appendChild (x); }
       r.appendChild (p);
       const del = document.createElement ('button'); del.className = 'hbtn danger'; del.textContent = '✕'; del.style.padding = '8px 10px';
@@ -716,9 +730,11 @@ window.addEventListener ('pointerup', (e) => endDrag (e, false)); window.addEven
 $('bImport').onclick = () => { $('iStatus').textContent = ''; $('imp').showModal(); };
 $('iClose').onclick = () => $('imp').close();
 $('iPick').onclick = () => $('fileIn').click();
+let importCb = null;     // importar desde dentro del editor de una tecla (sin crear teclas nuevas)
+function importInline (folder, cb) { $('iFolder').value = folder; importCb = cb; $('fileIn').click(); }
 $('fileIn').onchange = async () =>
 {
-  const files = [...$('fileIn').files], folder = $('iFolder').value;
+  const files = [...$('fileIn').files], folder = $('iFolder').value, inlineCb = importCb; importCb = null;
   let n = 0;
   for (const f of files)
   {
@@ -729,6 +745,7 @@ $('fileIn').onchange = async () =>
   $('fileIn').value = '';
   // crear una tecla para cada cancion nueva (en los espacios vacios de la pagina actual)
   let made = 0;
+  if (inlineCb) { $('fileIn').value = ''; await loadLib(); inlineCb (files.map (f => f.name)); return; }
   const used = new Set (config.pages.flatMap (p => p.buttons.filter (Boolean).map (b => b.file)));
   const { cols, rows } = gridSize(), btns = config.pages[page].buttons;
   for (const f of files)
@@ -918,6 +935,6 @@ $('bReopen').onclick = () => location.reload();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=13"></script>
+<script src="clip.js?v=14"></script>
 </body>
 </html>
