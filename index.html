@@ -91,7 +91,7 @@
 <div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF Showdeck se usa en horizontal</div></div>
 <header>
   <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v21</span></div></div>
+    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v22</span></div></div>
   <span class="pill" id="pStore" style="display:none">—</span>
   <button class="pill" id="pAwake" style="background:transparent;cursor:pointer">☀︎ Pantalla…</button>
   <button class="pill" id="pClock" style="background:transparent;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--text)">--:--</button>
@@ -253,7 +253,14 @@ function audioInit ()
   const SIL = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
   for (const a of [music, vog]) { if (!a.src) { a.src = SIL; a.play().then (() => a.pause()).catch (() => {}); } }
 }
-document.addEventListener ('touchend', audioInit, { passive: true }); document.addEventListener ('click', audioInit);
+// El audio de ShowDeck solo se activa al tocar una tecla que suena (no con cualquier toque),
+// y se suelta cuando no suena nada: asi Spotify u otra app sigue sonando al volver a ShowDeck.
+setInterval (() =>
+{
+  if (!ctx || ctx.state !== 'running') return;
+  const busy = !music.paused || !vog.paused || S.pending || S.macro || (window.speechSynthesis && speechSynthesis.speaking);
+  if (busy) S.idleSince = 0; else if (!S.idleSince) S.idleSince = Date.now(); else if (Date.now() - S.idleSince > 1500) { S.idleSince = 0; ctx.suspend().catch (() => {}); }
+}, 500);
 
 const level = () => (config ? config.vol : 0.8) * (S.keyVol ?? 1) * S.duck * (S.clip ? Math.pow (10, (S.clip.gainDb || 0) / 20) : 1);
 function ramp (g, to, sec)
@@ -379,7 +386,7 @@ function press (b, kk)
       if (delay > 0)
       {
         // desbloquear el reproductor dentro de este toque; arrancara al terminar la cuenta
-        music.play().then (() => music.pause()).catch (() => {});
+        audioInit(); music.play().then (() => music.pause()).catch (() => {});
         S.pending = { file: b.file, key, end: Date.now() + delay * 1000, timer: setTimeout (() => { S.pending = null; musicPlay (b, key); }, delay * 1000) };
         render();
       }
@@ -1134,6 +1141,6 @@ $('bReopen').onclick = () => location.reload();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=21"></script>
+<script src="clip.js?v=22"></script>
 </body>
 </html>
