@@ -91,7 +91,7 @@
 <div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF Showdeck se usa en horizontal</div></div>
 <header>
   <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v16</span></div></div>
+    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v17</span></div></div>
   <span class="pill" id="pStore" style="display:none">—</span>
   <button class="pill" id="pAwake" style="background:transparent;cursor:pointer">☀︎ Pantalla…</button>
   <button class="pill" id="pClock" style="background:transparent;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--text)">--:--</button>
@@ -291,7 +291,8 @@ function cancelPending () { if (S.pending) { clearTimeout (S.pending.timer); S.p
 async function vogPlay (b)
 {
   audioInit();
-  const url = await urlFor (b.file, 'vog'); if (!url) { toast ('No encuentro el anuncio «' + b.file + '»'); return; }
+  S.vogOn = b.file;
+  const url = await urlFor (b.file, 'vog'); if (!url) { S.vogOn = false; toast ('No encuentro el anuncio «' + b.file + '»'); return; }
   if (S.vurl) URL.revokeObjectURL (S.vurl);
   S.vurl = url; vog.src = url; vogGain.gain.value = Math.max (0, (b.vol ?? 100) / 100);
   duck (b.duck ?? 0.2);
@@ -810,11 +811,11 @@ function endDrag (e, cancel)
 window.addEventListener ('pointerup', (e) => endDrag (e, false)); window.addEventListener ('pointercancel', (e) => endDrag (e, true));
 
 // ================================================================ importar y biblioteca
-$('bImport').onclick = () => { $('iStatus').textContent = ''; $('imp').showModal(); };
+$('bImport').onclick = () => { $('iFolder').value = 'music'; $('iStatus').textContent = ''; $('imp').showModal(); };
 $('iClose').onclick = () => $('imp').close();
 $('iPick').onclick = () => $('fileIn').click();
 let importCb = null;     // importar desde dentro del editor de una tecla (sin crear teclas nuevas)
-function importInline (folder, cb) { $('iFolder').value = folder; importCb = cb; $('fileIn').click(); }
+function importInline (folder, cb) { $('iFolder').value = folder; importCb = cb; $('fileIn').click(); setTimeout (() => { $('iFolder').value = 'music'; }, 1500); }
 $('fileIn').onchange = async () =>
 {
   const files = [...$('fileIn').files], folder = $('iFolder').value, inlineCb = importCb; importCb = null;
@@ -847,6 +848,19 @@ $('fileIn').onchange = async () =>
   await loadLib();
   $('iStatus').textContent = '✅ ' + files.length + ' archivo(s) guardado(s)' + (made ? ' y ' + made + ' tecla(s) creada(s) en esta página.' : '. Asígnalos a las teclas en Editar.');
 };
+async function moveFile (f, to)
+{
+  const r = await fileGet (f.id); if (!r) return;
+  await tx ('files', 'readwrite', s => { s.delete (f.id); s.put ({ id: to + '/' + r.name, name: r.name, folder: to, size: r.size, blob: r.blob }); });
+  for (const pg of config.pages) for (let i = 0; i < pg.buttons.length; ++i)
+  {
+    const b = pg.buttons[i]; if (!b || b.file !== r.name) continue;
+    if (to === 'music' && b.type === 'vog') pg.buttons[i] = { label: b.label, icon: b.icon === '📢' ? '🎵' : b.icon, color: b.color === '#b48cff' ? '#5cc8ff' : b.color, type: 'music.play', file: r.name, img: b.img, hotkey: b.hotkey, vol: b.vol };
+    if (to === 'vog' && b.type === 'music.play') pg.buttons[i] = { label: b.label, icon: b.icon === '🎵' ? '📢' : b.icon, color: b.color === '#5cc8ff' ? '#b48cff' : b.color, type: 'vog', file: r.name, duck: 0.2, img: b.img, hotkey: b.hotkey, vol: b.vol };
+  }
+  await save(); await loadLib(); render();
+  toast ('«' + r.name + '» ahora es ' + (to === 'music' ? 'música' : 'anuncio'));
+}
 async function openLib ()
 {
   const box = $('libList'); box.innerHTML = '';
@@ -857,9 +871,10 @@ async function openLib ()
     for (const f of lib[folder])
     {
       const it = document.createElement ('div'); it.className = 'it';
-      it.innerHTML = '<span class="n"></span><span class="s">' + mb (f.size) + '</span><button class="hbtn danger" style="padding:6px 10px">Borrar</button>';
+      it.innerHTML = '<span class="n"></span><span class="s">' + mb (f.size) + '</span><button class="hbtn mv" style="padding:6px 10px">' + (folder === 'music' ? '→ Anuncio' : '→ Música') + '</button><button class="hbtn danger" style="padding:6px 10px">Borrar</button>';
+      it.querySelector ('.mv').onclick = async () => { await moveFile (f, folder === 'music' ? 'vog' : 'music'); openLib(); };
       it.querySelector ('.n').textContent = f.name;
-      it.querySelector ('button').onclick = async () => { if (!confirm ('¿Borrar «' + f.name + '» de RF Showdeck?')) return; await tx ('files', 'readwrite', s => s.delete (f.id)); await loadLib(); openLib(); };
+      it.querySelector ('.danger').onclick = async () => { if (!confirm ('¿Borrar «' + f.name + '» de RF Showdeck?')) return; await tx ('files', 'readwrite', s => s.delete (f.id)); await loadLib(); openLib(); };
       box.appendChild (it);
     }
   }
@@ -1094,6 +1109,6 @@ $('bReopen').onclick = () => location.reload();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=16"></script>
+<script src="clip.js?v=17"></script>
 </body>
 </html>
