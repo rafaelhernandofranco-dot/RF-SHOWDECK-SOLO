@@ -25,7 +25,7 @@
   .logo .solo { font-size:10px; letter-spacing:.3em; color:var(--amber); margin-left:6px; }
   .pill { font-size:11px; font-weight:600; color:var(--dim); border:1px solid var(--line); border-radius:20px; padding:4px 10px; }
   .sp { flex:1; }
-  .hbtn { background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px 14px; font:600 14px system-ui; cursor:pointer; }
+  .hbtn { background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:600 14px system-ui; cursor:pointer; }
   .hbtn.on { background:var(--amber); color:#111; border-color:var(--amber); }
   .primary { background:var(--cyan); color:#0b1118; border-color:var(--cyan); }
   .danger { color:var(--red); border-color:#5a2a30; }
@@ -73,6 +73,12 @@
   body.locked #bImport, body.locked #bLib, body.locked #bEdit, body.locked #bQuit, body.locked #bGrid { display:none !important; }
   body.locked #bLock { background:var(--amber); color:#111; border-color:var(--amber); }
   #pAwake.on { color:var(--green); border-color:#1f4d33; } #pAwake.off { color:var(--amber); border-color:#5a4a1c; }
+  .stp { display:grid; grid-template-columns:150px 1fr auto; gap:6px; align-items:center; margin-bottom:6px; }
+  .stp select, .stp input { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px; font:14px system-ui; width:100%; }
+  .fl { max-height:220px; overflow:auto; border:1px solid var(--line); border-radius:10px; background:var(--bg); }
+  .fl label { display:flex; align-items:center; gap:10px; padding:8px 10px; font-size:14px; color:var(--text) !important; border-bottom:1px solid rgba(255,255,255,.04); }
+  .fl input { width:20px; height:20px; accent-color:var(--cyan); }
+  .fl .ord { margin-left:auto; color:var(--cyan); font-weight:700; }
   #toast { position:fixed; left:50%; bottom:90px; transform:translateX(-50%); background:#1d2c40; border:1px solid var(--line); color:var(--text); padding:10px 16px; border-radius:12px; font-size:14px; display:none; z-index:80; }
   @media (max-height:600px) { .key .ico { font-size:20px; } .key .lbl { font-size:11px; } .key .sub { display:none; } #grid { gap:7px; } }
 </style>
@@ -81,8 +87,8 @@
 <div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF Showdeck se usa en horizontal</div></div>
 <header>
   <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v12</span></div></div>
-  <span class="pill" id="pStore">—</span>
+    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v13</span></div></div>
+  <span class="pill" id="pStore" style="display:none">—</span>
   <button class="pill" id="pAwake" style="background:transparent;cursor:pointer">☀︎ Pantalla…</button>
   <div class="sp"></div>
   <button class="hbtn" id="bGrid" style="display:none">6 × 4</button>
@@ -90,13 +96,16 @@
   <button class="hbtn" id="bLib">Biblioteca</button>
   <button class="hbtn" id="bEdit">Editar</button>
   <button class="hbtn danger" id="bQuit" aria-label="Cerrar RF ShowDeck">⏻ Cerrar</button>
+  <button class="hbtn" id="bPanic" aria-label="Parar todo" style="background:#b3261e;border-color:#b3261e;color:#fff">⛔ Parar todo</button>
   <button class="hbtn" id="bLock" aria-label="Modo show (bloquear)">🔓</button>
 </header>
 <nav id="pages"></nav>
 <div id="grid"></div>
 <div id="now">
+  <button class="tbtn" id="nPrev" aria-label="Anterior">⏮</button>
   <button class="tbtn pri" id="nPlay" aria-label="Reproducir o pausar">▶</button>
   <button class="tbtn" id="nStop" aria-label="Detener">■</button>
+  <button class="tbtn" id="nNext" aria-label="Siguiente">⏭</button>
   <div class="t"><div id="nName">Sin música</div><div id="nMeta">—</div><div id="prog"><i></i></div></div>
   <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8" aria-label="Volumen de la música">
 </div>
@@ -122,7 +131,7 @@
   <p class="hint" style="margin-top:-6px">Elige canciones desde la app Archivos: el iPad, iCloud o un USB conectado. Quedan guardadas dentro de RF Showdeck.</p>
   <div class="row"><label>Guardar como</label><select id="iFolder"><option value="music">Música</option><option value="vog">Voice of God (anuncios)</option></select></div>
   <p class="hint" id="iStatus"></p>
-  <div class="actions"><button class="hbtn" id="iClose">Cerrar</button><button class="hbtn primary" id="iPick">Elegir archivos…</button></div>
+  <div class="actions"><button class="hbtn" id="iClose">Cerrar</button><button class="hbtn" id="iRec">🎙 Grabar anuncio</button><button class="hbtn primary" id="iPick">Elegir archivos…</button></div>
 </dialog>
 
 <dialog id="lib">
@@ -138,6 +147,19 @@
     <input type="file" id="bkFile" hidden>
   </div>
   <div class="actions"><button class="hbtn" id="lClose">Cerrar</button></div>
+</dialog>
+
+<dialog id="rec">
+  <h3>🎙 Grabar anuncio</h3>
+  <p class="hint" style="margin-top:-6px">Graba con el micrófono del iPad (o el que tengas conectado). Queda como tecla de Voice of God.</p>
+  <div class="row"><label>Nombre del anuncio</label><input id="rName"></div>
+  <div style="display:flex;align-items:center;gap:14px;margin:8px 0">
+    <button class="hbtn" id="rGo" style="background:#b3261e;border-color:#b3261e;color:#fff;font-size:16px;padding:12px 18px">● Grabar</button>
+    <span id="rTime" style="font:700 22px ui-monospace,Menlo,monospace;color:var(--cyan)">0:00</span>
+    <span class="hint" id="rState"></span>
+  </div>
+  <audio id="rPrev" controls style="width:100%;display:none"></audio>
+  <div class="actions"><button class="hbtn" id="rClose">Cancelar</button><button class="hbtn primary" id="rSave" disabled>Guardar anuncio</button></div>
 </dialog>
 
 <dialog id="unlock">
@@ -222,6 +244,7 @@ async function urlFor (name, folder)
 }
 async function musicPlay (b, key)
 {
+  if (key !== S.qkey) S.queue = null;
   audioInit();
   const url = await urlFor (b.file, 'music');
   if (!url) { toast ('No encuentro «' + b.file + '» en la biblioteca'); return; }
@@ -263,7 +286,7 @@ function tts (b)
   const u = new SpeechSynthesisUtterance (b.text || '');
   const v = speechSynthesis.getVoices().find (v => v.lang && v.lang.toLowerCase().startsWith (b.lang || 'es'));
   if (v) u.voice = v; u.lang = v ? v.lang : (b.lang || 'es'); u.rate = 0.95;
-  u.onstart = () => duck (b.duck ?? 0.2); u.onend = unduck;
+  u.onstart = () => duck (b.duck ?? 0.2); u.onend = unduck; u.onerror = unduck;
   speechSynthesis.speak (u);
 }
 
@@ -279,10 +302,10 @@ setInterval (() =>
     if (c.fadeIn > 0 && t < c.start + c.fadeIn) e *= curve ((t - c.start) / c.fadeIn, c.inCurve);
     if (c.fadeOut > 0 && t > c.end - c.fadeOut) e *= curve ((c.end - t) / c.fadeOut, c.outCurve);
     if (musicGain && Date.now() > (S.fadeUntil || 0)) { const tt = ctx.currentTime; musicGain.gain.cancelScheduledValues (tt); musicGain.gain.setValueAtTime (level() * e, tt); }
-    if (t >= c.end - 0.03) { if (S.loop) music.currentTime = c.start || 0; else { music.pause(); S.playing = false; render(); } }
+    if (t >= c.end - 0.03) { if (S.loop) music.currentTime = c.start || 0; else { music.pause(); S.playing = false; render(); trackEnded(); } }
   }
 }, 40);
-music.onended = () => { if (!S.loop) { S.playing = false; S.paused = false; render(); } };
+music.onended = () => { if (!S.loop) { S.playing = false; S.paused = false; render(); trackEnded(); } };
 setInterval (() => { if (S.playing || S.pending) { renderNow(); renderSubs(); } }, 250);
 
 // ================================================================ acciones de teclas
@@ -294,7 +317,10 @@ const TYPES = {
   'vog': { name: 'Voice of God: anuncio grabado', p: [['file', 'Anuncio', 'vog'], ['duck', 'Volumen de la música durante el anuncio (0–1)', 'num']] },
   'tts': { name: 'Voice of God: voz sintética', p: [['text', 'Texto', 'text'], ['duck', 'Volumen de la música (0–1)', 'num']] },
   'vog.stop': { name: 'Voice of God: parar', p: [] },
-  'link': { name: 'Spotify / enlace: abrir (lista o canción)', p: [['url', 'Enlace (pega el link de Spotify que te mandaron)', 'text']] }
+  'link': { name: 'Spotify / enlace: abrir (lista o canción)', p: [['url', 'Enlace (pega el link de Spotify que te mandaron)', 'text']] },
+  'music.playlist': { name: 'Música: lista (varias canciones seguidas)', p: [['files', 'Canciones (tócalas en el orden en que deben sonar)', 'files'], ['fadeIn', 'Fade in (s)', 'num'], ['loop', 'Repetir la lista al terminar', 'bool']] },
+  'macro': { name: 'Macro: varias acciones en secuencia', p: [['steps', 'Pasos (se ejecutan en orden)', 'steps']] },
+  'panic': { name: 'Parar todo (pánico)', p: [] }
 };
 function press (b, kk)
 {
@@ -326,7 +352,74 @@ function press (b, kk)
     case 'tts': tts (b); break;
     case 'vog.stop': vogStop(); break;
     case 'link': openLink (b.url); break;
+    case 'music.playlist':
+    {
+      const key = kk || 'pl';
+      if (S.key === key && S.playing) { musicPause (b.fadeOut || 0.3); return; }
+      if (S.key === key && S.paused) { musicResume(); return; }
+      playlistStart (b, key); break;
+    }
+    case 'macro': { const key = kk || 'mc'; if (S.macro && S.macro.key === key) macroCancel(); else runMacro (b, key); break; }
+    case 'panic': panic(); break;
   }
+}
+
+// ---------------- lista de reproduccion
+function playlistStart (b, key)
+{
+  const files = (b.files || []).filter (f => lib.music.some (x => x.name === f));
+  if (!files.length) { toast ('Esta lista no tiene canciones (edita la tecla)'); return; }
+  cancelPending();
+  S.queue = files; S.qi = 0; S.qloop = !!b.loop; S.qkey = key; S.qfade = b.fadeIn || 0;
+  musicPlay ({ file: files[0], fadeIn: S.qfade }, key);
+}
+function queueGo (i)
+{
+  if (!S.queue) return false;
+  if (i >= S.queue.length) { if (S.qloop) i = 0; else { S.queue = null; S.playing = false; S.paused = false; render(); return true; } }
+  if (i < 0) i = 0;
+  S.qi = i; musicPlay ({ file: S.queue[i], fadeIn: 0.05 }, S.qkey);
+  return true;
+}
+function trackEnded () { if (S.queue && S.key === S.qkey) queueGo (S.qi + 1); }
+
+// ---------------- macros
+const sleep = (ms) => new Promise (r => setTimeout (r, ms));
+async function waitMs (ms) { const end = Date.now() + ms; while (Date.now() < end) { if (!S.macro || S.macro.cancel) throw new Error ('cancel'); await sleep (Math.min (100, end - Date.now())); } }
+function waitVog () { return new Promise ((ok) => { const t = setInterval (() => { if (!S.vogOn || !S.macro || S.macro.cancel) { clearInterval (t); ok(); } }, 120); }); }
+async function runMacro (b, key)
+{
+  const steps = b.steps || [];
+  if (!steps.length) { toast ('Esta macro no tiene pasos (edita la tecla)'); return; }
+  S.macro = { key, cancel: false }; render();
+  try
+  {
+    for (const s of steps)
+    {
+      if (!S.macro || S.macro.cancel) break;
+      switch (s.t)
+      {
+        case 'fadeout': { const sec = Number (s.sec) || 3; S.queue = null; musicStop (sec); await waitMs (sec * 1000); break; }
+        case 'stop': S.queue = null; musicStop (0); break;
+        case 'play': await musicPlay ({ file: s.file, fadeIn: Number (s.sec) || 0 }, 'macro:' + key); break;
+        case 'vog': await vogPlay ({ file: s.file, duck: 0.2 }); await waitVog(); break;
+        case 'tts': tts ({ text: s.text || '', duck: 0.2 }); S.vogOn = 'tts'; await waitVog(); break;
+        case 'wait': await waitMs ((Number (s.sec) || 1) * 1000); break;
+        case 'vogstop': vogStop(); break;
+      }
+    }
+  }
+  catch (e) {}
+  S.macro = null; render();
+}
+function macroCancel () { if (S.macro) S.macro.cancel = true; S.macro = null; render(); }
+
+// ---------------- panico
+function panic ()
+{
+  cancelPending(); macroCancel(); S.queue = null;
+  musicStop (0.6); vogStop();
+  toast ('⛔ Todo detenido');
 }
 
 // abrir un enlace (Spotify: directo en la app de Spotify)
@@ -360,6 +453,13 @@ function openLink (url)
 function gridSize () { return config.grid || { cols: 6, rows: 4 }; }
 function subFor (b, kk)
 {
+  if (b.type === 'music.playlist')
+  {
+    const n = (b.files || []).length;
+    if (S.key === kk && S.queue && (S.playing || S.paused)) return (S.paused ? '⏸ ' : '') + (S.qi + 1) + '/' + S.queue.length + ' · ' + fmt (music.currentTime);
+    return n + ' canción' + (n === 1 ? '' : 'es') + (b.loop ? ' ↻' : '');
+  }
+  if (b.type === 'macro') return S.macro && S.macro.key === kk ? 'En curso… (tocar = cancelar)' : (b.steps || []).length + ' pasos';
   if (b.type === 'music.play')
   {
     if (S.pending && S.pending.key === kk) return 'Inicia en ' + Math.ceil ((S.pending.end - Date.now()) / 1000) + ' s';
@@ -398,8 +498,8 @@ function render ()
     if (isLink) { const L = linkHrefs (b.url); k.href = L.app || L.web; if (!L.app) { k.target = '_blank'; k.rel = 'noopener'; } k.style.textDecoration = 'none'; k.style.color = 'inherit'; }
     if (!b) { k.className = 'key empty'; k.textContent = editing ? '+' : ''; k.onclick = () => editing && openEditor (i); g.appendChild (k); continue; }
     const kk = page + ':' + i;
-    const lit = (b.type === 'music.play' && S.key === kk && S.playing) || (b.type === 'music.toggle' && S.playing) || (b.type === 'vog' && S.vogOn === b.file);
-    const paused = b.type === 'music.play' && S.key === kk && S.paused;
+    const lit = ((b.type === 'music.play' || b.type === 'music.playlist') && S.key === kk && S.playing) || (b.type === 'macro' && S.macro && S.macro.key === kk) || (b.type === 'music.toggle' && S.playing) || (b.type === 'vog' && S.vogOn === b.file);
+    const paused = (b.type === 'music.play' || b.type === 'music.playlist') && S.key === kk && S.paused;
     const pend = b.type === 'music.play' && S.pending && S.pending.key === kk;
     k.className = 'key' + (lit ? ' lit' : '') + (paused ? ' paused' : '') + (pend ? ' pending' : '');
     k.innerHTML = '<div class="bar"></div><div class="ico"></div><div class="lbl"></div><div class="sub"></div>';
@@ -423,7 +523,7 @@ function renderSubs ()
   const btns = config.pages[page].buttons, kids = $('grid').children;
   for (let i = 0; i < kids.length; ++i)
   {
-    const b = btns[i]; if (!b || b.type !== 'music.play') continue;
+    const b = btns[i]; if (!b || (b.type !== 'music.play' && b.type !== 'music.playlist' && b.type !== 'macro')) continue;
     const s = kids[i].querySelector ('.sub'); if (s) s.textContent = subFor (b, page + ':' + i);
     const bar = kids[i].querySelector ('.kp i');
     if (bar) { const d = S.clip ? (S.clip.end - (S.clip.start || 0)) : music.duration, t = music.currentTime - (S.clip ? S.clip.start || 0 : 0); bar.style.width = (d ? Math.min (100, 100 * t / d) : 0).toFixed (1) + '%'; }
@@ -455,9 +555,77 @@ function paramInput (key, label, kind, val)
   else if (kind === 'bool') { el = document.createElement ('select'); el.innerHTML = '<option value="0">No</option><option value="1">Sí</option>'; el.value = val ? '1' : '0'; }
   else if (kind === 'repress') { el = document.createElement ('select'); el.innerHTML = '<option value="pause">Pausar (sigue donde iba)</option><option value="stop">Detener (vuelve al inicio)</option>'; el.value = val || 'pause'; }
   else if (kind === 'text') { el = document.createElement ('textarea'); el.rows = 3; el.value = val || ''; }
+  else if (kind === 'files' || kind === 'steps')
+  {
+    el = document.createElement ('input'); el.type = 'hidden';
+    el.value = JSON.stringify (val || []);
+    const ui = kind === 'files' ? filesUI (el) : stepsUI (el);
+    row.appendChild (ui);
+    el.dataset.key = key; el.dataset.kind = 'json'; row.appendChild (el);
+    return row;
+  }
   else { el = document.createElement ('input'); el.type = 'number'; el.step = 'any'; el.inputMode = 'decimal'; el.value = val ?? ''; }
   el.dataset.key = key; el.dataset.kind = kind; row.appendChild (el);
   return row;
+}
+function filesUI (hidden)
+{
+  const box = document.createElement ('div'); box.className = 'fl';
+  let sel = JSON.parse (hidden.value || '[]');
+  const draw = () =>
+  {
+    box.innerHTML = '';
+    if (!lib.music.length) { box.innerHTML = '<p class="hint" style="padding:10px">Primero importa canciones.</p>'; return; }
+    for (const f of lib.music)
+    {
+      const l = document.createElement ('label'), i = sel.indexOf (f.name);
+      l.innerHTML = '<input type="checkbox"' + (i >= 0 ? ' checked' : '') + '><span></span><span class="ord">' + (i >= 0 ? i + 1 : '') + '</span>';
+      l.children[1].textContent = f.name.replace (/\.[^.]+$/, '');
+      l.firstChild.onchange = (e) => { if (e.target.checked) sel.push (f.name); else sel = sel.filter (x => x !== f.name); hidden.value = JSON.stringify (sel); draw(); };
+      box.appendChild (l);
+    }
+  };
+  draw();
+  return box;
+}
+const STEP_T = { fadeout: 'Fade out de la música', stop: 'Detener la música', play: 'Reproducir canción', vog: 'Anuncio grabado', tts: 'Voz sintética', wait: 'Esperar', vogstop: 'Parar anuncio' };
+function stepsUI (hidden)
+{
+  const box = document.createElement ('div');
+  let steps = JSON.parse (hidden.value || '[]');
+  const sync = () => { hidden.value = JSON.stringify (steps); };
+  const opts = (list, v) => list.map (f => '<option' + (f.name === v ? ' selected' : '') + '></option>').join ('');
+  const draw = () =>
+  {
+    box.innerHTML = '';
+    steps.forEach ((s, i) =>
+    {
+      const r = document.createElement ('div'); r.className = 'stp';
+      const t = document.createElement ('select');
+      for (const [k, n] of Object.entries (STEP_T)) { const o = document.createElement ('option'); o.value = k; o.textContent = (i + 1) + '. ' + n; t.appendChild (o); }
+      t.value = s.t; t.onchange = () => { steps[i] = { t: t.value }; sync(); draw(); };
+      r.appendChild (t);
+      const p = document.createElement ('div'); p.style.display = 'flex'; p.style.gap = '6px';
+      const num = (ph, key) => { const n = document.createElement ('input'); n.type = 'number'; n.step = 'any'; n.inputMode = 'decimal'; n.placeholder = ph; n.value = s[key] ?? ''; n.oninput = () => { s[key] = n.value; sync(); }; return n; };
+      const pick = (list) => { const x = document.createElement ('select'); if (!list.length) x.innerHTML = '<option value="">(importa primero)</option>'; for (const f of list) { const o = document.createElement ('option'); o.value = o.textContent = f.name; x.appendChild (o); } if (s.file) x.value = s.file; else s.file = x.value; x.onchange = () => { s.file = x.value; sync(); }; return x; };
+      if (s.t === 'fadeout') p.appendChild (num ('segundos (3)', 'sec'));
+      else if (s.t === 'wait') p.appendChild (num ('segundos', 'sec'));
+      else if (s.t === 'play') { p.appendChild (pick (lib.music)); p.appendChild (num ('fade in s', 'sec')); }
+      else if (s.t === 'vog') p.appendChild (pick (lib.vog));
+      else if (s.t === 'tts') { const x = document.createElement ('input'); x.placeholder = 'Texto del anuncio'; x.value = s.text || ''; x.oninput = () => { s.text = x.value; sync(); }; p.appendChild (x); }
+      r.appendChild (p);
+      const del = document.createElement ('button'); del.className = 'hbtn danger'; del.textContent = '✕'; del.style.padding = '8px 10px';
+      del.onclick = () => { steps.splice (i, 1); sync(); draw(); };
+      r.appendChild (del);
+      box.appendChild (r);
+    });
+    const add = document.createElement ('button'); add.className = 'hbtn'; add.textContent = '+ Agregar paso';
+    add.onclick = () => { steps.push ({ t: steps.length ? 'vog' : 'fadeout', sec: steps.length ? undefined : 3 }); sync(); draw(); };
+    box.appendChild (add);
+    sync();
+  };
+  draw();
+  return box;
 }
 function fillParams (type, b) { const box = $('fParams'); box.innerHTML = ''; for (const [k, l, kind] of TYPES[type].p) box.appendChild (paramInput (k, l, kind, b[k])); }
 function openEditor (i)
@@ -483,11 +651,13 @@ $('fSave').onclick = () =>
   for (const el of $('fParams').querySelectorAll ('[data-key]'))
   {
     const v = el.value, k = el.dataset.kind; if (v === '') continue;
-    b[el.dataset.key] = (k === 'num' || k === 'delay') ? Number (v) : k === 'bool' ? v === '1' : v;
+    b[el.dataset.key] = (k === 'num' || k === 'delay') ? Number (v) : k === 'bool' ? v === '1' : k === 'json' ? JSON.parse (v) : v;
   }
   if (!b.label && b.file) b.label = b.file.replace (/\.[^.]+$/, '').slice (0, 28);
   if (b.type === 'link' && (!b.icon || b.icon === '🎵')) b.icon = '🟢';
   if (b.type === 'link' && !b.label) b.label = 'Spotify';
+  const DEF = { 'music.playlist': ['📜', 'Lista'], macro: ['⚡', 'Macro'], panic: ['⛔', 'Parar todo'] }[b.type];
+  if (DEF) { if (!b.icon || b.icon === '🎵') b.icon = DEF[0]; if (!b.label) b.label = DEF[1]; if (b.type === 'panic') b.color = b.color === '#5cc8ff' ? '#ff5c5c' : b.color; }
   const btns = config.pages[page].buttons; while (btns.length < editIdx) btns.push (null); btns[editIdx] = b;
   save(); $('dlg').close(); render();
 };
@@ -601,7 +771,10 @@ $('bLib').onclick = openLib; $('lClose').onclick = () => $('lib').close();
 
 // ================================================================ barra inferior
 $('nPlay').onclick = () => press ({ type: 'music.toggle' });
-$('nStop').onclick = () => press ({ type: 'music.stop', fade: 1 });
+$('nStop').onclick = () => { S.queue = null; press ({ type: 'music.stop', fade: 1 }); };
+$('nNext').onclick = () => { if (!queueGo ((S.qi || 0) + 1)) toast ('Siguiente funciona con las teclas de lista'); };
+$('nPrev').onclick = () => { if (S.queue && music.currentTime > 3) { try { music.currentTime = S.clip ? S.clip.start || 0 : 0; } catch {} return; } if (!queueGo ((S.qi || 0) - 1)) toast ('Anterior funciona con las teclas de lista'); };
+$('bPanic').onclick = panic;
 $('vol').oninput = () => { config.vol = +$('vol').value; if (S.playing) ramp (musicGain, level(), 0.05); save(); };
 
 // ================================================================ pantalla siempre encendida
@@ -615,11 +788,11 @@ async function keepAwake ()
     if (!wakeLock || wakeLock.released)
     {
       wakeLock = await navigator.wakeLock.request ('screen');
-      wakeLock.addEventListener ('release', () => { p.className = 'pill off'; p.textContent = '☾ Pantalla puede apagarse'; });
+      wakeLock.addEventListener ('release', () => { p.className = 'pill off'; p.textContent = '☾ Pantalla'; });
     }
-    p.className = 'pill on'; p.textContent = '☀︎ Pantalla encendida';
+    p.className = 'pill on'; p.textContent = '☀︎ Pantalla';
   }
-  catch (e) { p.className = 'pill off'; p.textContent = '☾ Toca para mantener encendida'; }
+  catch (e) { p.className = 'pill off'; p.textContent = '☾ Pantalla'; }
 }
 document.addEventListener ('visibilitychange', () => { if (document.visibilityState === 'visible') keepAwake(); });
 document.addEventListener ('touchend', () => { if (!wakeLock || wakeLock.released) keepAwake(); }, { passive: true });
@@ -687,6 +860,42 @@ $('bkFile').onchange = async () =>
   catch (e) { st.textContent = '⚠️ No se pudo restaurar: ' + (e && e.message || e); }
 };
 
+// ================================================================ grabar anuncio
+let rec = null, recChunks = [], recStream = null, recBlob = null, recTimer = null, recT0 = 0;
+$('iRec').onclick = () => { $('imp').close(); $('rName').value = 'Anuncio ' + new Date().toLocaleTimeString ([], { hour: '2-digit', minute: '2-digit' }).replace (':', '.'); $('rPrev').style.display = 'none'; $('rSave').disabled = true; $('rState').textContent = ''; $('rTime').textContent = '0:00'; $('rGo').textContent = '● Grabar'; $('rec').showModal(); };
+function recStopAll () { if (rec && rec.state !== 'inactive') rec.stop(); if (recStream) recStream.getTracks().forEach (t => t.stop()); recStream = null; clearInterval (recTimer); }
+$('rClose').onclick = () => { recStopAll(); $('rec').close(); };
+$('rGo').onclick = async () =>
+{
+  if (rec && rec.state === 'recording') { rec.stop(); return; }
+  try { recStream = await navigator.mediaDevices.getUserMedia ({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true } }); }
+  catch (e) { $('rState').textContent = '⚠️ Sin permiso de micrófono. Actívalo en Ajustes → Safari (o la app) → Micrófono.'; return; }
+  const mime = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find (m => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported (m)) || '';
+  rec = new MediaRecorder (recStream, mime ? { mimeType: mime } : undefined); recChunks = [];
+  rec.ondataavailable = (e) => e.data.size && recChunks.push (e.data);
+  rec.onstop = () =>
+  {
+    recBlob = new Blob (recChunks, { type: rec.mimeType || mime || 'audio/mp4' });
+    if (recStream) recStream.getTracks().forEach (t => t.stop()); recStream = null; clearInterval (recTimer);
+    $('rPrev').src = URL.createObjectURL (recBlob); $('rPrev').style.display = 'block';
+    $('rSave').disabled = false; $('rGo').textContent = '● Grabar de nuevo'; $('rState').textContent = 'Escúchalo antes de guardar.';
+  };
+  rec.start(); recT0 = Date.now(); $('rGo').textContent = '■ Detener'; $('rState').textContent = 'Grabando…'; $('rSave').disabled = true;
+  recTimer = setInterval (() => { $('rTime').textContent = fmt ((Date.now() - recT0) / 1000); }, 250);
+};
+$('rSave').onclick = async () =>
+{
+  if (!recBlob) return;
+  const ext = /webm/.test (recBlob.type) ? '.webm' : '.m4a';
+  const name = ($('rName').value.trim() || 'Anuncio').replace (/[\\/:*?"<>|]/g, '_') + ext;
+  await tx ('files', 'readwrite', s => s.put ({ id: 'vog/' + name, name, folder: 'vog', size: recBlob.size, blob: recBlob }));
+  await loadLib();
+  const { cols, rows } = gridSize(), btns = config.pages[page].buttons;
+  let slot = -1; for (let i = 0; i < cols * rows; ++i) if (!btns[i]) { slot = i; break; }
+  if (slot >= 0) { while (btns.length <= slot) btns.push (null); btns[slot] = { label: name.replace (/\.[^.]+$/, '').slice (0, 28), icon: '📢', color: '#b48cff', type: 'vog', file: name, duck: 0.2 }; save(); render(); }
+  $('rec').close(); toast ('✅ Anuncio guardado' + (slot >= 0 ? ' y tecla creada' : ''));
+};
+
 // ================================================================ cerrar
 $('bQuit').onclick = () =>
 {
@@ -709,6 +918,6 @@ $('bReopen').onclick = () => location.reload();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=12"></script>
+<script src="clip.js?v=13"></script>
 </body>
 </html>
