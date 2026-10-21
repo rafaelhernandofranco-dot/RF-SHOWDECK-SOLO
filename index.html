@@ -91,7 +91,7 @@
 <div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF Showdeck se usa en horizontal</div></div>
 <header>
   <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v18</span></div></div>
+    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v19</span></div></div>
   <span class="pill" id="pStore" style="display:none">—</span>
   <button class="pill" id="pAwake" style="background:transparent;cursor:pointer">☀︎ Pantalla…</button>
   <button class="pill" id="pClock" style="background:transparent;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--text)">--:--</button>
@@ -240,7 +240,7 @@ const save = () => kvSet ('config', config);
 let ctx = null, musicGain = null, vogGain = null;
 const music = new Audio(), vog = new Audio();
 music.preload = vog.preload = 'auto'; music.playsInline = vog.playsInline = true;
-const S = { file: null, playing: false, paused: false, pending: null, loop: false, clip: null, duck: 1, url: null, vurl: null, vogOn: false };
+const S = { file: null, playing: false, paused: false, pending: null, loop: false, clip: null, duck: 1, url: null, vurl: null, vogOn: false, mtok: 0 };
 function audioInit ()
 {
   if (ctx) { if (ctx.state !== 'running') ctx.resume(); return; }
@@ -270,7 +270,7 @@ async function urlFor (name, folder)
 async function musicPlay (b, key)
 {
   if (key !== S.qkey) S.queue = null;
-  audioInit();
+  ++S.mtok; audioInit();   // anula pausas/paradas con fade que aun no terminaron
   const url = await urlFor (b.file, 'music');
   if (!url) { toast ('No encuentro «' + b.file + '» en la biblioteca'); return; }
   if (S.url) URL.revokeObjectURL (S.url);
@@ -283,18 +283,22 @@ async function musicPlay (b, key)
   if (S.clip && S.clip.fadeIn > 0) S.fadeUntil = 0; else ramp (musicGain, level(), b.fadeIn || 0.02);   // con fade del editor, la curva la maneja el clip
   S.playing = true; render();
 }
-function musicPause (fade = 0.3) { ramp (musicGain, 0, fade); setTimeout (() => { music.pause(); }, fade * 1000 + 30); S.playing = false; S.paused = true; render(); }
-function musicResume (fade = 0.3) { audioInit(); music.play().catch (() => {}); ramp (musicGain, level(), fade); S.playing = true; S.paused = false; render(); }
-function musicStop (fade = 0) { ramp (musicGain, 0, fade); setTimeout (() => { music.pause(); try { music.currentTime = S.clip ? S.clip.start || 0 : 0; } catch {} }, fade * 1000 + 30); S.playing = false; S.paused = false; render(); }
+function musicPause (fade = 0.3) { ramp (musicGain, 0, fade); const tok = ++S.mtok; setTimeout (() => { if (tok === S.mtok) music.pause(); }, fade * 1000 + 30); S.playing = false; S.paused = true; render(); }
+function musicResume (fade = 0.3) { ++S.mtok; audioInit(); music.play().catch (() => {}); ramp (musicGain, level(), fade); S.playing = true; S.paused = false; render(); }
+function musicStop (fade = 0) { ramp (musicGain, 0, fade); const tok = ++S.mtok; setTimeout (() => { if (tok !== S.mtok) return; music.pause(); try { music.currentTime = S.clip ? S.clip.start || 0 : 0; } catch {} }, fade * 1000 + 30); S.playing = false; S.paused = false; render(); }
 function cancelPending () { if (S.pending) { clearTimeout (S.pending.timer); S.pending = null; } }
 
 async function vogPlay (b)
 {
-  audioInit();
+  audioInit(); if (!S.macro) S.vogMacro = null;
   S.vogOn = b.file;
   const url = await urlFor (b.file, 'vog'); if (!url) { S.vogOn = false; toast ('No encuentro el anuncio «' + b.file + '»'); return; }
   if (S.vurl) URL.revokeObjectURL (S.vurl);
-  S.vurl = url; vog.src = url; vogGain.gain.value = Math.max (0, (b.vol ?? 100) / 100);
+  S.vurl = url; vog.src = url; S.vvol = Math.max (0, (b.vol ?? 100) / 100);
+  S.vclip = (config.clips || {})['vog/' + b.file] || null;
+  const vc = S.vclip, vg = S.vvol * (vc ? Math.pow (10, (vc.gainDb || 0) / 20) : 1);
+  try { vogGain.gain.cancelScheduledValues (0); vogGain.gain.setValueAtTime (vc && vc.fadeIn > 0 ? 0 : vg, ctx.currentTime); } catch { vogGain.gain.value = vg; }
+  if (vc && vc.start) vog.addEventListener ('loadedmetadata', () => { try { vog.currentTime = vc.start; } catch {} }, { once: true });
   duck (b.duck ?? 0.2);
   S.vogOn = b.file;
   vog.play().catch (() => toast ('Toca la pantalla una vez para activar el audio'));
@@ -331,6 +335,16 @@ setInterval (() =>
     if (musicGain && Date.now() > (S.fadeUntil || 0)) { const tt = ctx.currentTime; musicGain.gain.cancelScheduledValues (tt); musicGain.gain.setValueAtTime (level() * e, tt); }
     if (t >= c.end - 0.03) { if (S.loop) music.currentTime = c.start || 0; else { music.pause(); S.playing = false; render(); trackEnded(); } }
   }
+}, 40);
+// recorte / fades / ganancia del editor para los anuncios
+setInterval (() =>
+{
+  const c = S.vclip; if (!c || vog.paused || !S.vogOn) return;
+  const t = vog.currentTime; let e = 1;
+  if (c.fadeIn > 0 && t < c.start + c.fadeIn) e *= curve ((t - c.start) / c.fadeIn, c.inCurve);
+  if (c.fadeOut > 0 && t > c.end - c.fadeOut) e *= curve ((c.end - t) / c.fadeOut, c.outCurve);
+  try { const tt = ctx.currentTime; vogGain.gain.cancelScheduledValues (tt); vogGain.gain.setValueAtTime (S.vvol * Math.pow (10, (c.gainDb || 0) / 20) * e, tt); } catch {}
+  if (t >= c.end - 0.03) { vog.pause(); unduck(); }
 }, 40);
 music.onended = () => { if (!S.loop) { S.playing = false; S.paused = false; render(); trackEnded(); } };
 setInterval (() => { if (S.playing || S.pending) { renderNow(); renderSubs(); } }, 250);
@@ -386,7 +400,7 @@ function press (b, kk)
       if (S.key === key && S.paused) { musicResume(); return; }
       playlistStart (b, key); break;
     }
-    case 'macro': { const key = kk || 'mc'; if (S.macro && S.macro.key === key) macroCancel(); else runMacro (b, key); break; }
+    case 'macro': { const key = kk || 'mc'; if (macroBusy (key)) macroStopAll (key); else runMacro (b, key); break; }
     case 'panic': panic(); break;
   }
 }
@@ -429,8 +443,8 @@ async function runMacro (b, key)
         case 'fadeout': { const sec = Number (s.sec) || 3; S.queue = null; musicStop (sec); await waitMs (sec * 1000); break; }
         case 'stop': S.queue = null; musicStop (0); break;
         case 'play': await musicPlay ({ file: s.file, fadeIn: Number (s.sec) || 0 }, 'macro:' + key); break;
-        case 'vog': await vogPlay ({ file: s.file, duck: 0.2 }); await waitVog(); break;
-        case 'tts': tts ({ text: s.text || '', duck: 0.2 }); S.vogOn = 'tts'; await waitVog(); break;
+        case 'vog': S.vogMacro = key; await vogPlay ({ file: s.file, duck: 0.2 }); await waitVog(); break;
+        case 'tts': S.vogMacro = key; tts ({ text: s.text || '', duck: 0.2 }); S.vogOn = 'tts'; await waitVog(); break;
         case 'wait': await waitMs ((Number (s.sec) || 1) * 1000); break;
         case 'vogstop': vogStop(); break;
       }
@@ -438,6 +452,15 @@ async function runMacro (b, key)
   }
   catch (e) {}
   S.macro = null; render();
+}
+// una tecla macro esta "activa" mientras corre o mientras suena lo que ella arranco; tocarla otra vez lo para todo
+function macroBusy (key) { return (S.macro && S.macro.key === key) || (S.key === 'macro:' + key && S.playing) || (S.vogMacro === key && !!S.vogOn); }
+function macroStopAll (key)
+{
+  macroCancel();
+  if (S.key === 'macro:' + key && (S.playing || S.paused)) { S.queue = null; musicStop (0.5); }
+  if (S.vogMacro === key && S.vogOn) vogStop();
+  S.vogMacro = null; render();
 }
 function macroCancel () { if (S.macro) S.macro.cancel = true; S.macro = null; render(); }
 
@@ -486,7 +509,7 @@ function subFor (b, kk)
     if (S.key === kk && S.queue && (S.playing || S.paused)) return (S.paused ? '⏸ ' : '') + (S.qi + 1) + '/' + S.queue.length + ' · ' + fmt (music.currentTime);
     return n + ' canción' + (n === 1 ? '' : 'es') + (b.loop ? ' ↻' : '');
   }
-  if (b.type === 'macro') return S.macro && S.macro.key === kk ? 'En curso… (tocar = cancelar)' : (b.steps || []).length + ' pasos';
+  if (b.type === 'macro') return macroBusy (kk) ? 'Sonando… (tocar = parar)' : (b.steps || []).length + ' pasos';
   if (b.type === 'music.play')
   {
     if (S.pending && S.pending.key === kk) return 'Inicia en ' + Math.ceil ((S.pending.end - Date.now()) / 1000) + ' s';
@@ -525,7 +548,7 @@ function render ()
     if (isLink) { const L = linkHrefs (b.url); k.href = L.app || L.web; if (!L.app) { k.target = '_blank'; k.rel = 'noopener'; } k.style.textDecoration = 'none'; k.style.color = 'inherit'; }
     if (!b) { k.className = 'key empty'; k.textContent = editing ? '+' : ''; k.onclick = () => editing && openEditor (i); g.appendChild (k); continue; }
     const kk = page + ':' + i;
-    const lit = ((b.type === 'music.play' || b.type === 'music.playlist') && S.key === kk && S.playing) || (b.type === 'macro' && S.macro && S.macro.key === kk) || (b.type === 'music.toggle' && S.playing) || (b.type === 'vog' && S.vogOn === b.file);
+    const lit = ((b.type === 'music.play' || b.type === 'music.playlist') && S.key === kk && S.playing) || (b.type === 'macro' && macroBusy (kk)) || (b.type === 'music.toggle' && S.playing) || (b.type === 'vog' && S.vogOn === b.file);
     const paused = (b.type === 'music.play' || b.type === 'music.playlist') && S.key === kk && S.paused;
     const pend = b.type === 'music.play' && S.pending && S.pending.key === kk;
     k.className = 'key' + (lit ? ' lit' : '') + (paused ? ' paused' : '') + (pend ? ' pending' : '');
@@ -672,11 +695,13 @@ function stepsUI (hidden)
       r.appendChild (t);
       const p = document.createElement ('div'); p.style.display = 'flex'; p.style.gap = '6px';
       const num = (ph, key) => { const n = document.createElement ('input'); n.type = 'number'; n.step = 'any'; n.inputMode = 'decimal'; n.placeholder = ph; n.value = s[key] ?? ''; n.oninput = () => { s[key] = n.value; sync(); }; return n; };
+      const editBtn = (fold) => { const e = document.createElement ('button'); e.type = 'button'; e.className = 'hbtn'; e.textContent = '🎚'; e.title = 'Editar audio'; e.style.padding = '8px 10px';
+        e.onclick = () => { if (!s.file) { toast ('Primero elige el audio'); return; } const f = s.file; sync(); $('fSave').click(); window.rfOpenClip && rfOpenClip (f, fold); }; return e; };
       const pick = (list, folder) => { const x = document.createElement ('select'); if (!list.length) x.innerHTML = '<option value="">(importa primero)</option>'; for (const f of list) { const o = document.createElement ('option'); o.value = o.textContent = f.name; x.appendChild (o); } if (s.file) x.value = s.file; else s.file = x.value; x.onchange = () => { s.file = x.value; sync(); }; return x; };
       if (s.t === 'fadeout') p.appendChild (num ('segundos (3)', 'sec'));
       else if (s.t === 'wait') p.appendChild (num ('segundos', 'sec'));
-      else if (s.t === 'play') { p.appendChild (pick (lib.music)); p.appendChild (num ('fade in s', 'sec')); p.appendChild (importBtn ('music', (names) => { if (names[0]) s.file = names[0]; sync(); draw(); })); }
-      else if (s.t === 'vog') { p.appendChild (pick (lib.vog)); p.appendChild (importBtn ('vog', (names) => { if (names[0]) s.file = names[0]; sync(); draw(); })); }
+      else if (s.t === 'play') { p.appendChild (pick (lib.music)); p.appendChild (num ('fade in s', 'sec')); p.appendChild (editBtn ('music')); p.appendChild (importBtn ('music', (names) => { if (names[0]) s.file = names[0]; sync(); draw(); })); }
+      else if (s.t === 'vog') { p.appendChild (pick (lib.vog)); p.appendChild (editBtn ('vog')); p.appendChild (importBtn ('vog', (names) => { if (names[0]) s.file = names[0]; sync(); draw(); })); }
       else if (s.t === 'tts') { const x = document.createElement ('input'); x.placeholder = 'Texto del anuncio'; x.value = s.text || ''; x.oninput = () => { s.text = x.value; sync(); }; p.appendChild (x); }
       r.appendChild (p);
       const del = document.createElement ('button'); del.className = 'hbtn danger'; del.textContent = '✕'; del.style.padding = '8px 10px';
@@ -1109,6 +1134,6 @@ $('bReopen').onclick = () => location.reload();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=18"></script>
+<script src="clip.js?v=19"></script>
 </body>
 </html>

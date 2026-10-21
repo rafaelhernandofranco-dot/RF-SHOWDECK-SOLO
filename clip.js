@@ -84,7 +84,7 @@
   const $ = (id) => document.getElementById (id);
   const cv = $('ceCanvas'), g = cv.getContext ('2d'), scroller = $('ceScroll');
 
-  let file = '', buf = null, dur = 0, peaks = null, PB = 256, actx = null;
+  let file = '', folder = 'music', ckey = '', buf = null, dur = 0, peaks = null, PB = 256, actx = null;
   let st = null, hist = [];
   let play = null;                 // { src, gain, t0, from }
   let head = 0;                    // cabezal (s)
@@ -95,16 +95,16 @@
   const push = () => { hist.push (JSON.stringify (st)); if (hist.length > 50) hist.shift(); };
 
   // ---------- abrir
-  async function open (f)
+  async function open (f, fold)
   {
-    file = f; stop(); buf = null; peaks = null; hist = [];
+    file = f; folder = fold || 'music'; ckey = folder === 'vog' ? 'vog/' + f : f; stop(); buf = null; peaks = null; hist = [];
     ed.classList.add ('on');
     $('ceSub').textContent = f; $('ceName').textContent = f.replace (/\.[^.]+$/, ''); $('ceInfo').textContent = '';
     msg ('Cargando audio…'); draw();
     try
     {
-      const rec = await fileGet ('music/' + f);
-      if (!rec) { msg ('No encuentro la canción en la biblioteca.'); return; }
+      const rec = await fileGet (folder + '/' + f);
+      if (!rec) { msg ('No encuentro el archivo en la biblioteca.'); return; }
       if (rec.size > 200e6) { msg ('Este archivo es muy pesado (' + Math.round (rec.size / 1e6) + ' MB). Usa una versión MP3 o M4A.'); return; }
       const ab = await rec.blob.arrayBuffer();
       actx = actx || new (window.AudioContext || window.webkitAudioContext)();
@@ -114,7 +114,7 @@
     dur = buf.duration;
     $('ceInfo').textContent = (buf.numberOfChannels > 1 ? 'Estéreo' : 'Mono') + ' · ' + Math.round (buf.sampleRate / 100) / 10 + ' kHz · ' + fmt (dur);
     buildPeaks();
-    const saved = (config.clips || {})[f];
+    const saved = (config.clips || {})[ckey];
     st = Object.assign (def(), saved || {});
     st.end = Math.min (st.end || dur, dur);
     head = st.start;
@@ -302,8 +302,8 @@
     if (!st) return close();
     config.clips = config.clips || {};
     const d = def(), same = Math.abs (st.start) < 0.05 && Math.abs (st.end - dur) < 0.05 && !st.fadeIn && !st.fadeOut && !st.gainDb;
-    if (same) delete config.clips[file];
-    else config.clips[file] = { start: +st.start.toFixed (2), end: +st.end.toFixed (2), fadeIn: +st.fadeIn.toFixed (2), fadeOut: +st.fadeOut.toFixed (2), inCurve: st.inCurve, outCurve: st.outCurve, gainDb: st.gainDb, dur: +dur.toFixed (2) };
+    if (same) delete config.clips[ckey];
+    else config.clips[ckey] = { start: +st.start.toFixed (2), end: +st.end.toFixed (2), fadeIn: +st.fadeIn.toFixed (2), fadeOut: +st.fadeOut.toFixed (2), inCurve: st.inCurve, outCurve: st.outCurve, gainDb: st.gainDb, dur: +dur.toFixed (2) };
     save(); close();
   };
   window.addEventListener ('resize', () => ed.classList.contains ('on') && draw());
@@ -314,12 +314,13 @@
   bEd.onclick = () =>
   {
     const sel = document.querySelector ('#fParams [data-key="file"]');
-    if (!sel || !sel.value) { alert ('Primero elige la canción.'); return; }
-    document.getElementById ('dlg').close();
-    open (sel.value);
+    if (!sel || !sel.value) { alert ('Primero elige el audio.'); return; }
+    const fold = document.getElementById ('fType').value === 'vog' ? 'vog' : 'music';
+    const f = sel.value; document.getElementById ('fSave').click();      // guarda la tecla y abre el editor
+    open (f, fold);
   };
   if (act) act.insertBefore (bEd, document.getElementById ('fCancel'));
   const _fill = fillParams;
-  fillParams = function (type, b) { const r = _fill.apply (this, arguments); bEd.style.display = type === 'music.play' ? '' : 'none'; return r; };
+  fillParams = function (type, b) { const r = _fill.apply (this, arguments); bEd.style.display = type === 'music.play' || type === 'vog' ? '' : 'none'; return r; };
   window.rfOpenClip = open;
 })();
