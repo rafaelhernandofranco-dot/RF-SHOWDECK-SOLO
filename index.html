@@ -91,12 +91,11 @@
 <div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF Showdeck se usa en horizontal</div></div>
 <header>
   <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v20</span></div></div>
+    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v19</span></div></div>
   <span class="pill" id="pStore" style="display:none">—</span>
   <button class="pill" id="pAwake" style="background:transparent;cursor:pointer">☀︎ Pantalla…</button>
   <button class="pill" id="pClock" style="background:transparent;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--text)">--:--</button>
   <div class="sp"></div>
-  <button class="hbtn" id="bMix" style="display:none" title="Que los anuncios suenen encima de Spotify sin pararlo">🎧 Spotify: pausar</button>
   <button class="hbtn" id="bSkin" style="display:none" aria-label="Apariencia">🎨</button>
   <button class="hbtn" id="bGrid" style="display:none">6 × 4</button>
   <button class="hbtn" id="bImport">Importar</button>
@@ -242,17 +241,10 @@ let ctx = null, musicGain = null, vogGain = null;
 const music = new Audio(), vog = new Audio();
 music.preload = vog.preload = 'auto'; music.playsInline = vog.playsInline = true;
 const S = { file: null, playing: false, paused: false, pending: null, loop: false, clip: null, duck: 1, url: null, vurl: null, vogOn: false, mtok: 0 };
-// Convivir con Spotify: en iPad (iOS 17+) el audio de ShowDeck se mezcla con el de otras apps en vez de pausarlas
-function applyMix ()
-{
-  const on = !!(config && config.mixOthers);
-  try { if (navigator.audioSession) navigator.audioSession.type = on ? 'ambient' : 'playback'; } catch {}
-  const b = $('bMix'); if (b) { b.textContent = on ? '🎧 Spotify: mezclar' : '🎧 Spotify: pausar'; b.classList.toggle ('on', on); }
-}
 function audioInit ()
 {
   if (ctx) { if (ctx.state !== 'running') ctx.resume(); return; }
-  applyMix(); ctx = new (window.AudioContext || window.webkitAudioContext)();
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
   musicGain = ctx.createGain(); vogGain = ctx.createGain();
   ctx.createMediaElementSource (music).connect (musicGain).connect (ctx.destination);
   ctx.createMediaElementSource (vog).connect (vogGain).connect (ctx.destination);
@@ -792,8 +784,7 @@ $('fSave').onclick = () =>
   const btns = config.pages[page].buttons; while (btns.length < editIdx) btns.push (null); btns[editIdx] = b;
   save(); $('dlg').close(); render();
 };
-$('bEdit').onclick = () => { editing = !editing; document.body.classList.toggle ('editing', editing); $('bEdit').classList.toggle ('on', editing); $('bEdit').textContent = editing ? 'Listo' : 'Editar'; $('bGrid').style.display = editing ? '' : 'none'; $('bSkin').style.display = editing ? '' : 'none'; $('bMix').style.display = editing ? '' : 'none'; render(); };
-$('bMix').onclick = () => { config.mixOthers = !config.mixOthers; save(); applyMix(); toast (config.mixOthers ? 'Los anuncios sonarán encima de Spotify (sin pararlo)' : 'Al sonar ShowDeck, Spotify se pausa (normal)'); };
+$('bEdit').onclick = () => { editing = !editing; document.body.classList.toggle ('editing', editing); $('bEdit').classList.toggle ('on', editing); $('bEdit').textContent = editing ? 'Listo' : 'Editar'; $('bGrid').style.display = editing ? '' : 'none'; $('bSkin').style.display = editing ? '' : 'none'; render(); };
 const GRIDS = [[6, 4], [8, 3], [5, 3], [8, 4]];
 $('bGrid').onclick = () => { const { cols, rows } = gridSize(); const i = GRIDS.findIndex (([c, r]) => c === cols && r === rows); const [c, r] = GRIDS[(i + 1) % GRIDS.length]; config.grid = { cols: c, rows: r }; save(); render(); };
 
@@ -1136,13 +1127,13 @@ $('bReopen').onclick = () => location.reload();
   config = (await kvGet ('config')) || JSON.parse (JSON.stringify (DEFAULT));
   $('vol').value = config.vol ?? 0.8;
   await loadLib();
-  applySkin (config.skin || 'noche'); applyMix();
+  applySkin (config.skin || 'noche');
   document.body.classList.toggle ('locked', !!config.locked); $('bLock').textContent = config.locked ? '🔒 Modo show' : '🔓';
   render();
   keepAwake();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=20"></script>
+<script src="clip.js?v=19"></script>
 </body>
 </html>
