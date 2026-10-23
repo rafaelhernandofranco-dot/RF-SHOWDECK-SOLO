@@ -23,6 +23,8 @@
   .logo .name { font-family:"Avenir Next", -apple-system, sans-serif; font-size:19px; letter-spacing:.16em; }
   .logo .name b { font-weight:800; color:#f2f6fb; } .logo .name i { font-style:normal; font-weight:300; color:var(--cyan); }
   .logo .solo { font-size:10px; letter-spacing:.3em; color:var(--amber); margin-left:6px; }
+  @media (max-width:1120px) { header { gap:8px; } header .hbtn { padding:9px 9px; font-size:13px; } .name .solo + .solo { display:none; } }
+  @media (max-width:1060px) { #bQuit .lbl { display:none; } }
   .pill { font-size:11px; font-weight:600; color:var(--dim); border:1px solid var(--line); border-radius:20px; padding:4px 10px; }
   .sp { flex:1; }
   .hbtn { background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px 12px; font:600 14px system-ui; cursor:pointer; }
@@ -91,7 +93,7 @@
 <div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF Showdeck se usa en horizontal</div></div>
 <header>
   <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v23</span></div></div>
+    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v24</span></div></div>
   <span class="pill" id="pStore" style="display:none">—</span>
   <button class="pill" id="pAwake" style="background:transparent;cursor:pointer">☀︎ Pantalla…</button>
   <button class="pill" id="pClock" style="background:transparent;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--text)">--:--</button>
@@ -101,7 +103,7 @@
   <button class="hbtn" id="bImport">Importar</button>
   <button class="hbtn" id="bLib">Biblioteca</button>
   <button class="hbtn" id="bEdit">Editar</button>
-  <button class="hbtn danger" id="bQuit" aria-label="Cerrar RF ShowDeck">⏻ Cerrar</button>
+  <button class="hbtn danger" id="bQuit" aria-label="Cerrar RF ShowDeck">⏻<span class="lbl"> Cerrar</span></button>
   <button class="hbtn" id="bPanic" aria-label="Parar todo" style="background:#b3261e;border-color:#b3261e;color:#fff">⛔ Parar todo</button>
   <button class="hbtn" id="bLock" aria-label="Modo show (bloquear)">🔓</button>
 </header>
@@ -1173,7 +1175,7 @@ $('bReopen').onclick = () => location.reload();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=23"></script>
-<script src="pro.js?v=23"></script>
+<script src="clip.js?v=24"></script>
+<script src="pro.js?v=24"></script>
 </body>
 </html>
