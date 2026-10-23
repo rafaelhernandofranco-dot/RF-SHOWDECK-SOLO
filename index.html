@@ -91,7 +91,7 @@
 <div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF Showdeck se usa en horizontal</div></div>
 <header>
   <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v22</span></div></div>
+    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v23</span></div></div>
   <span class="pill" id="pStore" style="display:none">—</span>
   <button class="pill" id="pAwake" style="background:transparent;cursor:pointer">☀︎ Pantalla…</button>
   <button class="pill" id="pClock" style="background:transparent;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--text)">--:--</button>
@@ -237,8 +237,8 @@ let config = null, page = 0, editing = false, editIdx = -1;
 const save = () => kvSet ('config', config);
 
 // ================================================================ motor de audio
-let ctx = null, musicGain = null, vogGain = null;
-const music = new Audio(), vog = new Audio();
+let ctx = null, musicGain = null, vogGain = null, tailGain = null;
+const music = new Audio(), vog = new Audio(), tailEl = new Audio();   // tailEl: la cancion que sale en un crossfade
 music.preload = vog.preload = 'auto'; music.playsInline = vog.playsInline = true;
 const S = { file: null, playing: false, paused: false, pending: null, loop: false, clip: null, duck: 1, url: null, vurl: null, vogOn: false, mtok: 0 };
 function audioInit ()
@@ -248,17 +248,18 @@ function audioInit ()
   musicGain = ctx.createGain(); vogGain = ctx.createGain();
   ctx.createMediaElementSource (music).connect (musicGain).connect (ctx.destination);
   ctx.createMediaElementSource (vog).connect (vogGain).connect (ctx.destination);
+  tailGain = ctx.createGain(); tailGain.gain.value = 0; ctx.createMediaElementSource (tailEl).connect (tailGain).connect (ctx.destination);
   musicGain.gain.value = 0;
   // desbloquear los reproductores en iPad (deben "sonar" una vez dentro de un toque)
   const SIL = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
-  for (const a of [music, vog]) { if (!a.src) { a.src = SIL; a.play().then (() => a.pause()).catch (() => {}); } }
+  for (const a of [music, vog, tailEl]) { if (!a.src) { a.src = SIL; a.play().then (() => a.pause()).catch (() => {}); } }
 }
 // El audio de ShowDeck solo se activa al tocar una tecla que suena (no con cualquier toque),
 // y se suelta cuando no suena nada: asi Spotify u otra app sigue sonando al volver a ShowDeck.
 setInterval (() =>
 {
   if (!ctx || ctx.state !== 'running') return;
-  const busy = !music.paused || !vog.paused || S.pending || S.macro || (window.speechSynthesis && speechSynthesis.speaking);
+  const busy = !music.paused || !vog.paused || !tailEl.paused || S.pending || S.macro || (window.speechSynthesis && speechSynthesis.speaking);
   if (busy) S.idleSince = 0; else if (!S.idleSince) S.idleSince = Date.now(); else if (Date.now() - S.idleSince > 1500) { S.idleSince = 0; ctx.suspend().catch (() => {}); }
 }, 500);
 
@@ -278,21 +279,52 @@ async function musicPlay (b, key)
 {
   if (key !== S.qkey) S.queue = null;
   ++S.mtok; audioInit();   // anula pausas/paradas con fade que aun no terminaron
+  const xf = Number (config.xfade) || 0, cross = xf > 0 && S.playing && !music.paused && S.url && ctx;
   const url = await urlFor (b.file, 'music');
   if (!url) { toast ('No encuentro «' + b.file + '» en la biblioteca'); return; }
-  if (S.url) URL.revokeObjectURL (S.url);
+  if (cross) await xfadeHandOff (xf);
+  else if (S.url) URL.revokeObjectURL (S.url);
   S.url = url; S.file = b.file; S.key = key; S.keyVol = (b.vol ?? 100) / 100; S.paused = false; S.loop = !!b.loop; S.clip = (config.clips || {})[b.file] || null; S.fadeOutKey = b.fadeOut || 0;
   music.src = url; music.loop = S.loop && !S.clip;
   const startAt = S.clip ? S.clip.start || 0 : 0;
   music.addEventListener ('loadedmetadata', () => { if (startAt) try { music.currentTime = startAt; } catch {} }, { once: true });
   ramp (musicGain, 0, 0);
   try { await music.play(); } catch (e) { toast ('Toca la pantalla una vez para activar el audio'); return; }
-  if (S.clip && S.clip.fadeIn > 0) S.fadeUntil = 0; else ramp (musicGain, level(), b.fadeIn || 0.02);   // con fade del editor, la curva la maneja el clip
-  S.playing = true; render();
+  if (S.clip && S.clip.fadeIn > 0) S.fadeUntil = 0; else ramp (musicGain, level(), Math.max (b.fadeIn || 0.02, cross ? xf : 0));   // con fade del editor, la curva la maneja el clip
+  S.playing = true; S.xfDone = false; render();
 }
-function musicPause (fade = 0.3) { ramp (musicGain, 0, fade); const tok = ++S.mtok; setTimeout (() => { if (tok === S.mtok) music.pause(); }, fade * 1000 + 30); S.playing = false; S.paused = true; render(); }
+// Crossfade: la cancion que suena pasa a un segundo reproductor que baja mientras entra la nueva
+let tailTimer = null;
+async function xfadeHandOff (sec)
+{
+  const oldUrl = S.url, pos = music.currentTime, lvl = musicGain.gain.value, clipEnd = S.clip && S.clip.end;
+  S.url = null;                              // este URL ahora es del reproductor de salida
+  clearTimeout (tailTimer); tailEl.pause();
+  if (tailEl.dataset.url && tailEl.dataset.url !== oldUrl) URL.revokeObjectURL (tailEl.dataset.url);
+  tailEl.dataset.url = oldUrl; tailEl.src = oldUrl;
+  tailGain.gain.cancelScheduledValues (ctx.currentTime); tailGain.gain.setValueAtTime (0, ctx.currentTime);
+  await new Promise ((ok) => { const done = () => ok(); tailEl.addEventListener ('loadedmetadata', done, { once: true }); setTimeout (done, 700); });
+  try { tailEl.currentTime = pos + 0.12; } catch {}
+  try { await tailEl.play(); } catch { tailEl.pause(); return; }
+  try { if (Math.abs (tailEl.currentTime - music.currentTime) > 0.1) tailEl.currentTime = music.currentTime; } catch {}
+  const t = ctx.currentTime;
+  tailGain.gain.cancelScheduledValues (t); tailGain.gain.setValueAtTime (lvl, t); tailGain.gain.linearRampToValueAtTime (0, t + sec);
+  const left = clipEnd ? Math.max (0.05, clipEnd - tailEl.currentTime) : sec;
+  tailTimer = setTimeout (() => { tailEl.pause(); tailGain.gain.setValueAtTime (0, ctx.currentTime); }, Math.min (sec, left) * 1000 + 60);
+}
+// En las listas, con crossfade, la siguiente cancion entra antes de que termine la actual
+setInterval (() =>
+{
+  const xf = Number (config && config.xfade) || 0;
+  if (!xf || !S.queue || S.key !== S.qkey || !S.playing || music.paused || S.xfDone) return;
+  const end = S.clip ? S.clip.end : music.duration;
+  if (!isFinite (end) || end < xf * 2) return;
+  if (end - music.currentTime <= xf) { S.xfDone = true; queueGo (S.qi + 1); }
+}, 100);
+function tailStop (fade) { if (!tailGain || tailEl.paused) return; ramp (tailGain, 0, fade); clearTimeout (tailTimer); tailTimer = setTimeout (() => tailEl.pause(), fade * 1000 + 30); }
+function musicPause (fade = 0.3) { tailStop (fade); ramp (musicGain, 0, fade); const tok = ++S.mtok; setTimeout (() => { if (tok === S.mtok) music.pause(); }, fade * 1000 + 30); S.playing = false; S.paused = true; render(); }
 function musicResume (fade = 0.3) { ++S.mtok; audioInit(); music.play().catch (() => {}); ramp (musicGain, level(), fade); S.playing = true; S.paused = false; render(); }
-function musicStop (fade = 0) { ramp (musicGain, 0, fade); const tok = ++S.mtok; setTimeout (() => { if (tok !== S.mtok) return; music.pause(); try { music.currentTime = S.clip ? S.clip.start || 0 : 0; } catch {} }, fade * 1000 + 30); S.playing = false; S.paused = false; render(); }
+function musicStop (fade = 0) { tailStop (fade); ramp (musicGain, 0, fade); const tok = ++S.mtok; setTimeout (() => { if (tok !== S.mtok) return; music.pause(); try { music.currentTime = S.clip ? S.clip.start || 0 : 0; } catch {} }, fade * 1000 + 30); S.playing = false; S.paused = false; render(); }
 function cancelPending () { if (S.pending) { clearTimeout (S.pending.timer); S.pending = null; } }
 
 async function vogPlay (b)
@@ -1141,6 +1173,7 @@ $('bReopen').onclick = () => location.reload();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register ('sw.js', { updateViaCache: 'none' }).catch (() => {});
 })();
 </script>
-<script src="clip.js?v=22"></script>
+<script src="clip.js?v=23"></script>
+<script src="pro.js?v=23"></script>
 </body>
 </html>
