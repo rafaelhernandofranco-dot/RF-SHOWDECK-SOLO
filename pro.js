@@ -5,7 +5,7 @@
   // ------------------------------------------------------------------ licencia
   // Clave publica de RF Audio Pro (las claves se firman con la clave privada, que solo tiene Rafael).
   // Mientras sea null, la licencia esta desactivada y la app funciona completa.
-  const LIC_PUB = null;            // 'x.y' (JWK P-256 en base64url)
+  const LIC_PUB = 'zOFSLLZmxs9wOLX-EsfoiC9gHpRMBJElI-E9paBkM7Y.eH7Q1Jd27ErVAlt3QlUgNtpVJB2wLyKd-_HWDDcsH_0';   // firma de RF Audio Pro
   const DEMO_DAYS = 14;
   const LIC_CONTACT = 'RF Audio Pro';
   const PRODUCTS = { solo: 'ShowDeck Solo', full: 'ShowDeck Full', pack: 'ShowDeck Solo + Full' };
