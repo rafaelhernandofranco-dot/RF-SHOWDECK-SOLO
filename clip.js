@@ -1,4 +1,4 @@
-// RF Showdeck Solo (iPad): Editor de clip (una pista, tipo DAW). No destructivo: guarda los ajustes en config.clips[archivo].
+// RF ShowKeys Solo (iPad): Editor de clip (una pista, tipo DAW). No destructivo: guarda los ajustes en config.clips[archivo].
 (() => {
   const css = document.createElement ('style');
   css.textContent = `

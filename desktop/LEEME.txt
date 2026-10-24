@@ -1,4 +1,4 @@
-RF ShowDeck Solo — RF Audio Pro
+RF ShowKeys Solo — RF Audio Pro
 ================================
 
 iPad / iPhone / Android (no necesitan instalador)
@@ -7,17 +7,17 @@ iPad / iPhone / Android (no necesitan instalador)
 
 MAC
   1. Usa el zip que corresponde a tu Mac:
-       - Apple Silicon (M1, M2, M3, M4):  RF-ShowDeck-Solo-Mac-AppleSilicon.zip
-       - Intel:                           RF-ShowDeck-Solo-Mac-Intel.zip
+       - Apple Silicon (M1, M2, M3, M4):  RF-ShowKeys-Solo-Mac-AppleSilicon.zip
+       - Intel:                           RF-ShowKeys-Solo-Mac-Intel.zip
      (Menú  → Acerca de este Mac: «Chip Apple» = Apple Silicon, «Procesador Intel» = Intel)
-  2. Ábrelo con doble clic y arrastra «RF ShowDeck Solo» a la carpeta Aplicaciones.
+  2. Ábrelo con doble clic y arrastra «RF ShowKeys Solo» a la carpeta Aplicaciones.
   3. La primera vez: clic derecho sobre la app → Abrir → Abrir.
      Si el Mac no te deja: Ajustes del Sistema → Privacidad y seguridad → abajo, «Abrir igualmente».
      (Sale porque la app todavía no tiene firma de Apple; es normal.)
 
 WINDOWS
-  1. Clic derecho sobre RF-ShowDeck-Solo-Windows.zip → «Extraer todo…».
-  2. Entra a la carpeta «RF ShowDeck Solo» y abre «RF ShowDeck Solo.exe».
+  1. Clic derecho sobre RF-ShowKeys-Solo-Windows.zip → «Extraer todo…».
+  2. Entra a la carpeta «RF ShowKeys Solo» y abre «RF ShowKeys Solo.exe».
   3. Si sale «Windows protegió su PC»: «Más información» → «Ejecutar de todas formas».
   4. Para tenerlo a mano: clic derecho sobre el .exe → «Anclar a inicio» o «Crear acceso directo».
 

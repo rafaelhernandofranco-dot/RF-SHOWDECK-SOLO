@@ -1,8 +1,8 @@
 {
   "name": "rf-showdeck-solo",
-  "productName": "RF ShowDeck Solo",
+  "productName": "RF ShowKeys Solo",
   "version": "1.0.0",
-  "description": "RF ShowDeck Solo para computadora (RF Audio Pro)",
+  "description": "RF ShowKeys Solo para computadora (RF Audio Pro)",
   "main": "main.js",
   "author": "RF Audio Pro"
 }

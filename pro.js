@@ -1,4 +1,4 @@
-// RF ShowDeck Solo: Ajustes (crossfade), Ayuda, Bienvenida y Licencia (demo + activacion).
+// RF ShowKeys Solo: Ajustes (crossfade), Ayuda, Bienvenida y Licencia (demo + activacion).
 'use strict';
 (() =>
 {
@@ -8,7 +8,7 @@
   const LIC_PUB = 'H_-6tFEsPeTZ_9VFVyRb1EuUbZ91ZFs0kkwauBBy53U.AfTwin69lnXzAEPHREhTfwsRzhO0TG-eZQBXYnhdVcg';   // firma de RF Audio Pro
   const DEMO_DAYS = 14;
   const LIC_CONTACT = 'RF Audio Pro';
-  const PRODUCTS = { solo: 'ShowDeck Solo', full: 'ShowDeck Full', pack: 'ShowDeck Solo + Full' };
+  const PRODUCTS = { solo: 'ShowKeys Solo', full: 'ShowKeys Full', pack: 'ShowKeys Solo + Full' };
 
   const b64u = (s) => Uint8Array.from (atob (s.replace (/-/g, '+').replace (/_/g, '/') + '==='.slice ((s.length + 3) % 4)), c => c.charCodeAt (0));
   let lic = { state: 'off' };      // off | ok | demo | expired
@@ -52,12 +52,12 @@
   async function activate (key, msgEl)
   {
     const info = await verifyKey (key);
-    if (info && info.wrong) { msgEl.textContent = 'Esa clave es de ' + (PRODUCTS[info.wrong] || 'otro producto') + ', no de ShowDeck Solo.'; msgEl.style.color = 'var(--red)'; return false; }
-    if (!info) { msgEl.textContent = 'Esa clave no es válida para ShowDeck Solo. Cópiala completa, empieza con RF1-.'; msgEl.style.color = 'var(--red)'; return false; }
+    if (info && info.wrong) { msgEl.textContent = 'Esa clave es de ' + (PRODUCTS[info.wrong] || 'otro producto') + ', no de ShowKeys Solo.'; msgEl.style.color = 'var(--red)'; return false; }
+    if (!info) { msgEl.textContent = 'Esa clave no es válida para ShowKeys Solo. Cópiala completa, empieza con RF1-.'; msgEl.style.color = 'var(--red)'; return false; }
     await kvSet ('lic', { key: key.trim(), at: Date.now() });
     lic = { state: 'ok', info }; licShow();
     msgEl.textContent = '✓ Activada a nombre de ' + info.n; msgEl.style.color = 'var(--green)';
-    toast ('✓ ShowDeck Solo activado. ¡Gracias!', 4000);
+    toast ('✓ ShowKeys Solo activado. ¡Gracias!', 4000);
     return true;
   }
 
@@ -120,7 +120,7 @@
     $('setXf').value = Number (config.xfade) || 0; $('setXfTxt').textContent = xfTxt (Number (config.xfade) || 0);
     $('setMsg').textContent = ''; $('setKey').value = '';
     const ver = (document.querySelector ('.name .solo + .solo') || {}).textContent || '';
-    $('setAbout').textContent = 'RF ShowDeck Solo ' + ver + ' · © RF Audio Pro';
+    $('setAbout').textContent = 'RF ShowKeys Solo ' + ver + ' · © RF Audio Pro';
     licShow(); dSet.showModal();
   };
   $('setOk').onclick = () => dSet.close();
@@ -147,7 +147,7 @@
   wall.innerHTML = `
     <div style="font-size:46px">🔑</div>
     <div style="font-size:24px;font-weight:700">Terminó la versión de prueba</div>
-    <div style="color:var(--dim);max-width:460px;line-height:1.5">Tus teclas y canciones siguen guardadas. Activa tu licencia de ${LIC_CONTACT} para seguir usando RF ShowDeck Solo.</div>
+    <div style="color:var(--dim);max-width:460px;line-height:1.5">Tus teclas y canciones siguen guardadas. Activa tu licencia de ${LIC_CONTACT} para seguir usando RF ShowKeys Solo.</div>
     <input id="wKey" placeholder="Pega aquí tu clave (RF1-…)" autocomplete="off" autocapitalize="off" spellcheck="false">
     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><button class="hbtn primary" id="wAct">Activar</button><button class="hbtn" id="wBk">Guardar respaldo</button></div>
     <p class="hint" id="wMsg"></p>`;
@@ -158,7 +158,7 @@
   // ------------------------------------------------------------------ ayuda
   const dHlp = document.createElement ('dialog'); dHlp.id = 'hlp'; dHlp.style.width = 'min(720px, 96vw)';
   const H = (t, body) => `<details><summary>${t}</summary><div class="hb">${body}</div></details>`;
-  dHlp.innerHTML = `<h3>❓ Cómo se usa RF ShowDeck Solo</h3>` +
+  dHlp.innerHTML = `<h3>❓ Cómo se usa RF ShowKeys Solo</h3>` +
     H ('1. Primeros pasos', `<ol>
       <li><b>Importar</b> → elige canciones de la app Archivos, iCloud o un USB. Cada canción crea su tecla.</li>
       <li>Toca una tecla y suena. Tócala otra vez y <b>pausa</b>; otra vez y sigue desde donde iba.</li>
@@ -171,7 +171,7 @@
       <li><b>Voz sintética</b>: escribe un texto y el iPad lo lee con la voz que elijas.</li>
       <li><b>Macro</b>: varias acciones en orden (ver punto 4).</li>
       <li><b>Pausa/Reanudar, Detener, Fade out, Parar anuncio</b>: controles rápidos.</li>
-      <li><b>Spotify</b>: abre tu lista en la app de Spotify; vuelve con «◀ ShowDeck» y sigue sonando.</li>
+      <li><b>Spotify</b>: abre tu lista en la app de Spotify; vuelve con «◀ ShowKeys» y sigue sonando.</li>
       <li><b>⛔ Parar todo</b>: detiene música, anuncios y macros de una.</li></ul>`) +
     H ('3. Editor de audio (onda)', `<ul>
       <li>En <b>Editar</b>, abre una tecla de música o anuncio y toca <b>🎚 Editar audio</b>.</li>
@@ -192,7 +192,7 @@
       <li><b>☀︎ Pantalla</b>: mantiene la pantalla encendida mientras la app está abierta.</li>
       <li><b>Reloj</b>: tócalo para un temporizador (discursos, recesos).</li>
       <li><b>Teclado o pedal Bluetooth</b>: asigna un atajo a cada tecla. <b>Espacio</b> = pausa/sigue, <b>Esc</b> = parar todo.</li>
-      <li>Si abres otra app, el iPad puede pausar ShowDeck: vuelve y toca la tecla.</li></ul>`) +
+      <li>Si abres otra app, el iPad puede pausar ShowKeys: vuelve y toca la tecla.</li></ul>`) +
     H ('8. Respaldo y otro equipo', `<ul>
       <li><b>Biblioteca → Guardar respaldo</b>: guarda teclas y canciones en un archivo (Archivos o iCloud).</li>
       <li><b>Restaurar respaldo</b> en otro iPad, Android o computadora para tener todo igual.</li>
@@ -208,7 +208,7 @@
 
   // ------------------------------------------------------------------ bienvenida
   const SL = [
-    ['🎛', 'Bienvenido a RF ShowDeck Solo', 'Tu reproductor de música y anuncios para eventos en vivo, en el iPad, sin internet.'],
+    ['🎛', 'Bienvenido a RF ShowKeys Solo', 'Tu reproductor de música y anuncios para eventos en vivo, en el iPad, sin internet.'],
     ['🎵', 'Importa y toca', 'Toca <b>Importar</b> y elige tus canciones. Cada una crea una tecla: tócala para que suene y otra vez para pausar.'],
     ['✏️', 'Hazlo tuyo', 'Con <b>Editar</b> cambias nombres, colores, imágenes y acciones, editas el audio con la onda y armas macros.'],
     ['🔒', 'Listo para el show', 'Activa <b>🔒 Modo show</b> y <b>☀︎ Pantalla</b> antes del evento. La ayuda completa está en <b>⚙</b>.'],

@@ -6,12 +6,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="RF Showdeck">
+<meta name="apple-mobile-web-app-title" content="RF ShowKeys">
 <meta name="theme-color" content="#0b1118">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-180.png">
-<title>RF Showdeck Solo</title>
+<title>RF ShowKeys Solo</title>
 <style>
   :root { --bg:#0b1118; --panel:#141e2b; --panel2:#1a2636; --line:#2a3a52; --text:#d8e2f0; --dim:#8aa0bd; --cyan:#5cc8ff; --amber:#ffd166; --red:#ff6b6b; --green:#3ddc84; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -90,10 +90,10 @@
 </style>
 </head>
 <body>
-<div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF Showdeck se usa en horizontal</div></div>
+<div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF ShowKeys se usa en horizontal</div></div>
 <header>
   <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="name"><b>SHOW</b><i>DECK</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v26</span></div></div>
+    <div class="name"><b>SHOW</b><i>KEYS</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v27</span></div></div>
   <span class="pill" id="pStore" style="display:none">—</span>
   <button class="pill" id="pAwake" style="background:transparent;cursor:pointer">☀︎ Pantalla…</button>
   <button class="pill" id="pClock" style="background:transparent;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--text)">--:--</button>
@@ -103,7 +103,7 @@
   <button class="hbtn" id="bImport">Importar</button>
   <button class="hbtn" id="bLib">Biblioteca</button>
   <button class="hbtn" id="bEdit">Editar</button>
-  <button class="hbtn danger" id="bQuit" aria-label="Cerrar RF ShowDeck">⏻<span class="lbl"> Cerrar</span></button>
+  <button class="hbtn danger" id="bQuit" aria-label="Cerrar RF ShowKeys">⏻<span class="lbl"> Cerrar</span></button>
   <button class="hbtn" id="bPanic" aria-label="Parar todo" style="background:#b3261e;border-color:#b3261e;color:#fff">⛔ Parar todo</button>
   <button class="hbtn" id="bLock" aria-label="Modo show (bloquear)">🔓</button>
 </header>
@@ -121,7 +121,7 @@
 <div id="toast"></div>
 <div id="linkBar" style="display:none;position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:85;background:#1d2c40;border:1px solid var(--line);border-radius:14px;padding:10px 12px;gap:12px;align-items:center;font-size:14px"><span>Abriendo Spotify… ¿No se abrió?</span><button class="hbtn primary" id="linkBarGo">Abrir el enlace</button><button class="hbtn" onclick="this.parentNode.style.display='none'">✕</button></div>
 <div id="closed" style="display:none;position:fixed;inset:0;z-index:90;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px">
-  <div style="font-size:22px;font-weight:700">RF ShowDeck Solo está cerrado</div>
+  <div style="font-size:22px;font-weight:700">RF ShowKeys Solo está cerrado</div>
   <div style="color:var(--dim);max-width:420px">La música se detuvo y todo quedó guardado. Para salir, desliza hacia arriba desde el borde inferior.</div>
   <button class="hbtn primary" id="bReopen">Volver a abrir</button>
 </div>
@@ -141,7 +141,7 @@
 
 <dialog id="imp">
   <h3>Importar</h3>
-  <p class="hint" style="margin-top:-6px">Elige canciones desde la app Archivos: el iPad, iCloud o un USB conectado. Quedan guardadas dentro de RF Showdeck.</p>
+  <p class="hint" style="margin-top:-6px">Elige canciones desde la app Archivos: el iPad, iCloud o un USB conectado. Quedan guardadas dentro de RF ShowKeys.</p>
   <div class="row"><label>Guardar como</label><select id="iFolder"><option value="music">Música</option><option value="vog">Voice of God (anuncios)</option></select></div>
   <p class="hint" id="iStatus"></p>
   <div class="actions"><button class="hbtn" id="iClose">Cerrar</button><button class="hbtn" id="iRec">🎙 Grabar anuncio</button><button class="hbtn primary" id="iPick">Elegir archivos…</button></div>
@@ -256,8 +256,8 @@ function audioInit ()
   const SIL = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
   for (const a of [music, vog, tailEl]) { if (!a.src) { a.src = SIL; a.play().then (() => a.pause()).catch (() => {}); } }
 }
-// El audio de ShowDeck solo se activa al tocar una tecla que suena (no con cualquier toque),
-// y se suelta cuando no suena nada: asi Spotify u otra app sigue sonando al volver a ShowDeck.
+// El audio de ShowKeys solo se activa al tocar una tecla que suena (no con cualquier toque),
+// y se suelta cuando no suena nada: asi Spotify u otra app sigue sonando al volver a ShowKeys.
 setInterval (() =>
 {
   if (!ctx || ctx.state !== 'running') return;
@@ -671,7 +671,7 @@ function paramInput (key, label, kind, val)
     };
     fill(); if (!el.options.length || el.options.length < 2) speechSynthesis.onvoiceschanged = fill;
     const t = document.createElement ('button'); t.type = 'button'; t.className = 'hbtn'; t.textContent = '▶ Probar voz'; t.style.marginTop = '6px';
-    t.onclick = () => { const txt = ($('fParams').querySelector ('[data-key="text"]') || {}).value || 'Prueba de voz de RF ShowDeck'; tts ({ text: txt, voice: el.value, duck: 1 }); };
+    t.onclick = () => { const txt = ($('fParams').querySelector ('[data-key="text"]') || {}).value || 'Prueba de voz de RF ShowKeys'; tts ({ text: txt, voice: el.value, duck: 1 }); };
     setTimeout (() => row.appendChild (t));
   }
   else if (kind === 'files' || kind === 'steps')
@@ -940,7 +940,7 @@ async function openLib ()
       it.innerHTML = '<span class="n"></span><span class="s">' + mb (f.size) + '</span><button class="hbtn mv" style="padding:6px 10px">' + (folder === 'music' ? '→ Anuncio' : '→ Música') + '</button><button class="hbtn danger" style="padding:6px 10px">Borrar</button>';
       it.querySelector ('.mv').onclick = async () => { await moveFile (f, folder === 'music' ? 'vog' : 'music'); openLib(); };
       it.querySelector ('.n').textContent = f.name;
-      it.querySelector ('.danger').onclick = async () => { if (!confirm ('¿Borrar «' + f.name + '» de RF Showdeck?')) return; await tx ('files', 'readwrite', s => s.delete (f.id)); await loadLib(); openLib(); };
+      it.querySelector ('.danger').onclick = async () => { if (!confirm ('¿Borrar «' + f.name + '» de RF ShowKeys?')) return; await tx ('files', 'readwrite', s => s.delete (f.id)); await loadLib(); openLib(); };
       box.appendChild (it);
     }
   }
@@ -982,7 +982,7 @@ $('pAwake').onclick = () =>
 {
   keepAwake();
   if (!('wakeLock' in navigator)) toast ('Este iPad no permite mantener la pantalla encendida desde la app. Ve a Ajustes → Pantalla y brillo → Bloqueo automático → Nunca.', 7000);
-  else toast (wakeLock && !wakeLock.released ? 'La pantalla no se apagará mientras RF ShowDeck esté abierta.' : 'Toca la pantalla una vez para mantenerla encendida.', 4000);
+  else toast (wakeLock && !wakeLock.released ? 'La pantalla no se apagará mientras RF ShowKeys esté abierta.' : 'Toca la pantalla una vez para mantenerla encendida.', 4000);
 };
 
 // ================================================================ modo show (bloqueo)
@@ -1006,10 +1006,10 @@ $('bkSave').onclick = async () =>
   {
     const withSongs = $('bkSongs').checked, files = [], blobs = [];
     if (withSongs) for (const f of [...lib.music, ...lib.vog]) { const r = await fileGet (f.id); if (r) { files.push ({ id: r.id, name: r.name, folder: r.folder, size: r.blob.size, type: r.blob.type || '' }); blobs.push (r.blob); } }
-    const man = enc.encode (JSON.stringify ({ app: 'RF ShowDeck Solo', v: 1, date: new Date().toISOString(), config, files }));
+    const man = enc.encode (JSON.stringify ({ app: 'RF ShowKeys Solo', v: 1, date: new Date().toISOString(), config, files }));
     const len = new Uint8Array (4); new DataView (len.buffer).setUint32 (0, man.length, true);
     const blob = new Blob ([enc.encode ('RFSD1'), len, man, ...blobs], { type: 'application/octet-stream' });
-    const name = 'RF-ShowDeck-respaldo-' + new Date().toISOString().slice (0, 10) + (withSongs ? '' : '-teclas') + '.rfdeck';
+    const name = 'RF-ShowKeys-respaldo-' + new Date().toISOString().slice (0, 10) + (withSongs ? '' : '-teclas') + '.rfdeck';
     const file = new File ([blob], name, { type: 'application/octet-stream' });
     if (navigator.canShare && navigator.canShare ({ files: [file] })) { await navigator.share ({ files: [file], title: name }); st.textContent = '✅ Respaldo listo (' + mb (blob.size) + '). Si lo guardaste en Archivos, ya está seguro.'; }
     else { const a = document.createElement ('a'); a.href = URL.createObjectURL (blob); a.download = name; document.body.appendChild (a); a.click(); setTimeout (() => { URL.revokeObjectURL (a.href); a.remove(); }, 4000); st.textContent = '✅ Respaldo descargado (' + mb (blob.size) + ').'; }
@@ -1023,7 +1023,7 @@ $('bkFile').onchange = async () =>
   if (!f) return;
   try
   {
-    if (dec.decode (await f.slice (0, 5).arrayBuffer()) !== 'RFSD1') throw new Error ('ese archivo no es un respaldo de RF ShowDeck');
+    if (dec.decode (await f.slice (0, 5).arrayBuffer()) !== 'RFSD1') throw new Error ('ese archivo no es un respaldo de RF ShowKeys');
     const n = new DataView (await f.slice (5, 9).arrayBuffer()).getUint32 (0, true);
     const man = JSON.parse (dec.decode (await f.slice (9, 9 + n).arrayBuffer()));
     if (!confirm ('¿Restaurar el respaldo del ' + String (man.date).slice (0, 10) + '? Se reemplazan tus teclas actuales' + (man.files.length ? ' y se agregan ' + man.files.length + ' archivo(s) de audio.' : '.'))) return;
@@ -1155,7 +1155,7 @@ document.addEventListener ('keydown', (e) =>
 // ================================================================ cerrar
 $('bQuit').onclick = () =>
 {
-  if (!confirm ('¿Cerrar RF ShowDeck Solo? Se detiene la música.')) return;
+  if (!confirm ('¿Cerrar RF ShowKeys Solo? Se detiene la música.')) return;
   cancelPending(); if (S.playing) musicStop (1); vogStop();
   setTimeout (() => { music.removeAttribute ('src'); music.load(); if (ctx) ctx.suspend(); $('closed').style.display = 'flex'; }, 1100);
 };
@@ -1164,7 +1164,7 @@ $('bReopen').onclick = () => location.reload();
 // ================================================================ arranque
 (async () =>
 {
-  try { db = await idb(); } catch (e) { toast ('Este navegador no permite guardar datos: abre RF Showdeck desde la pantalla de inicio o en Safari normal (no privado).', 8000); return; }
+  try { db = await idb(); } catch (e) { toast ('Este navegador no permite guardar datos: abre RF ShowKeys desde la pantalla de inicio o en Safari normal (no privado).', 8000); return; }
   config = (await kvGet ('config')) || JSON.parse (JSON.stringify (DEFAULT));
   $('vol').value = config.vol ?? 0.8;
   await loadLib();

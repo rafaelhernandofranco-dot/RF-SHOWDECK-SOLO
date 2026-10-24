@@ -1,10 +1,10 @@
 #!/bin/bash
-# Crea los instaladores de RF ShowDeck Solo (Mac Apple Silicon, Mac Intel y Windows) en el Escritorio.
+# Crea los instaladores de RF ShowKeys Solo (Mac Apple Silicon, Mac Intel y Windows) en el Escritorio.
 # Se ejecuta en el Mac de Rafael:  bash crear-instaladores-mac.sh
 set -e
 V=33.2.1
-NAME="RF ShowDeck Solo"
-OUT="$HOME/Desktop/ShowDeck-Instaladores"
+NAME="RF ShowKeys Solo"
+OUT="$HOME/Desktop/ShowKeys-Instaladores"
 W=$(mktemp -d)
 mkdir -p "$OUT"
 cd "$W"
@@ -30,12 +30,12 @@ for A in arm64 x64; do
   plutil -replace CFBundleShortVersionString -string "1.0.0" "$P"
   xattr -cr "$APP"; codesign --force --deep -s - "$APP" 2>/dev/null
   T=$([ $A = arm64 ] && echo "Mac-AppleSilicon" || echo "Mac-Intel")
-  rm -f "$OUT/RF-ShowDeck-Solo-$T.zip"; (cd "m$A" && ditto -c -k --keepParent "$NAME.app" "$OUT/RF-ShowDeck-Solo-$T.zip")
+  rm -f "$OUT/RF-ShowKeys-Solo-$T.zip"; (cd "m$A" && ditto -c -k --keepParent "$NAME.app" "$OUT/RF-ShowKeys-Solo-$T.zip")
 done
 rm -rf win; mkdir -p "win/$NAME"; (cd "win/$NAME" && unzip -q "../../e-win32-x64.zip")
 mv "win/$NAME/electron.exe" "win/$NAME/$NAME.exe"
 mkdir -p "win/$NAME/resources/app"; cp "$SRC/desktop/main.js" "$SRC/desktop/package.json" "win/$NAME/resources/app/"
-rm -f "$OUT/RF-ShowDeck-Solo-Windows.zip"; (cd win && zip -qry "$OUT/RF-ShowDeck-Solo-Windows.zip" "$NAME")
+rm -f "$OUT/RF-ShowKeys-Solo-Windows.zip"; (cd win && zip -qry "$OUT/RF-ShowKeys-Solo-Windows.zip" "$NAME")
 cp "$SRC/desktop/LEEME.txt" "$OUT/LEEME.txt"
 rm -rf "$W"
-echo ""; echo "LISTO: los instaladores están en el Escritorio, carpeta ShowDeck-Instaladores"; open "$OUT"
+echo ""; echo "LISTO: los instaladores están en el Escritorio, carpeta ShowKeys-Instaladores"; open "$OUT"
