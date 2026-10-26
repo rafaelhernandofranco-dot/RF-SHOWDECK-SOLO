@@ -171,7 +171,7 @@
       <li><b>Voz sintética</b>: escribe un texto y el iPad lo lee con la voz que elijas.</li>
       <li><b>Macro</b>: varias acciones en orden (ver punto 4).</li>
       <li><b>Pausa/Reanudar, Detener, Fade out, Parar anuncio</b>: controles rápidos.</li>
-      <li><b>Spotify</b>: abre tu lista en la app de Spotify; vuelve con «◀ ShowKeys» y sigue sonando.</li>
+      <li><b>Música en app</b> (Spotify, Apple Music, YouTube Music, Amazon Music): pega el enlace de la lista; la tecla abre la app y vuelves con «◀ ShowKeys». Spotify, Apple Music y Amazon Music siguen sonando; YouTube Music solo con Premium.</li>
       <li><b>⛔ Parar todo</b>: detiene música, anuncios y macros de una.</li></ul>`) +
     H ('3. Editor de audio (onda)', `<ul>
       <li>En <b>Editar</b>, abre una tecla de música o anuncio y toca <b>🎚 Editar audio</b>.</li>

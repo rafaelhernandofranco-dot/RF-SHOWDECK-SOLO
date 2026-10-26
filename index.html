@@ -93,7 +93,7 @@
 <div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF ShowKeys se usa en horizontal</div></div>
 <header>
   <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="name"><b>SHOW</b><i>KEYS</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v27</span></div></div>
+    <div class="name"><b>SHOW</b><i>KEYS</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v28</span></div></div>
   <span class="pill" id="pStore" style="display:none">—</span>
   <button class="pill" id="pAwake" style="background:transparent;cursor:pointer">☀︎ Pantalla…</button>
   <button class="pill" id="pClock" style="background:transparent;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--text)">--:--</button>
@@ -119,7 +119,7 @@
 </div>
 <input type="file" id="fileIn" accept="audio/*,.mp3,.m4a,.wav,.aac,.aif,.aiff" multiple hidden>
 <div id="toast"></div>
-<div id="linkBar" style="display:none;position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:85;background:#1d2c40;border:1px solid var(--line);border-radius:14px;padding:10px 12px;gap:12px;align-items:center;font-size:14px"><span>Abriendo Spotify… ¿No se abrió?</span><button class="hbtn primary" id="linkBarGo">Abrir el enlace</button><button class="hbtn" onclick="this.parentNode.style.display='none'">✕</button></div>
+<div id="linkBar" style="display:none;position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:85;background:#1d2c40;border:1px solid var(--line);border-radius:14px;padding:10px 12px;gap:12px;align-items:center;font-size:14px"><span>Abriendo <span id="linkBarName">Spotify</span>… ¿No se abrió?</span><button class="hbtn primary" id="linkBarGo">Abrir el enlace</button><button class="hbtn" onclick="this.parentNode.style.display='none'">✕</button></div>
 <div id="closed" style="display:none;position:fixed;inset:0;z-index:90;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px">
   <div style="font-size:22px;font-weight:700">RF ShowKeys Solo está cerrado</div>
   <div style="color:var(--dim);max-width:420px">La música se detuvo y todo quedó guardado. Para salir, desliza hacia arriba desde el borde inferior.</div>
@@ -399,7 +399,7 @@ const TYPES = {
   'vog': { name: 'Voice of God: anuncio grabado', p: [['file', 'Anuncio', 'vog'], ['vol', 'Volumen del anuncio (%)', 'vol'], ['duck', 'Volumen de la música durante el anuncio (0–1)', 'num']] },
   'tts': { name: 'Voice of God: voz sintética', p: [['text', 'Texto', 'text'], ['voice', 'Voz', 'voice'], ['duck', 'Volumen de la música (0–1)', 'num']] },
   'vog.stop': { name: 'Voice of God: parar', p: [] },
-  'link': { name: 'Spotify / enlace: abrir (lista o canción)', p: [['url', 'Enlace (pega el link de Spotify que te mandaron)', 'text']] },
+  'link': { name: 'Música en app: Spotify, Apple Music, YouTube Music, Amazon Music (lista o canción)', p: [['url', 'Enlace (pega el link de la lista o canción: «Compartir → Copiar enlace» en la app)', 'text']] },
   'music.playlist': { name: 'Música: lista (varias canciones seguidas)', p: [['files', 'Canciones (tócalas en el orden en que deben sonar)', 'files'], ['fadeIn', 'Fade in (s)', 'num'], ['loop', 'Repetir la lista al terminar', 'bool'], ['vol', 'Volumen de la lista (%)', 'vol']] },
   'macro': { name: 'Macro: varias acciones en secuencia', p: [['steps', 'Pasos (se ejecutan en orden)', 'steps']] },
   'panic': { name: 'Parar todo (pánico)', p: [] }
@@ -513,30 +513,52 @@ function panic ()
   toast ('⛔ Todo detenido');
 }
 
-// abrir un enlace (Spotify: directo en la app de Spotify)
+// abrir un enlace de musica: directo en la app (Spotify, Apple Music, YouTube Music, YouTube, Amazon Music)
 function tapLink (href, blank)
 {
   const a = document.createElement ('a'); a.href = href; if (blank) { a.target = '_blank'; a.rel = 'noopener'; }
   a.style.display = 'none'; document.body.appendChild (a); a.click(); setTimeout (() => a.remove(), 1000);
 }
-function linkHrefs (url)
+// Enlaces de musica: Spotify, Apple Music, YouTube Music, YouTube y Amazon Music.
+// Devuelve { svc, name, icon, web, app }: 'app' abre la app directo (si hay esquema propio), 'web' es el plan B.
+function musicLink (url)
 {
   url = String (url || '').trim();
-  const web = /^https?:/i.test (url) ? url : (/^spotify:/i.test (url) ? 'https://open.spotify.com/' + url.split (':').slice (1).join ('/') : (url ? 'https://' + url : ''));
-  const m = web.match (/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|track|artist|episode|show)\/([A-Za-z0-9]+)/);
-  return { web, app: m ? 'spotify:' + m[1] + ':' + m[2] : null };
+  let web = url;
+  if (/^spotify:/i.test (url)) web = 'https://open.spotify.com/' + url.split (':').slice (1).join ('/');
+  else if (/^music:\/\//i.test (url)) web = 'https://' + url.slice (8);
+  else if (url && !/^https?:/i.test (url)) web = 'https://' + url;
+  let host = ''; try { host = new URL (web).hostname.toLowerCase(); } catch (e) {}
+  const R = (svc, name, icon, app) => ({ svc, name, icon, web, app: app || null });
+  if (/(^|\.)spotify\.com$/.test (host) || /^spotify:/i.test (url))
+  {
+    const m = web.match (/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|track|artist|episode|show)\/([A-Za-z0-9]+)/);
+    return R ('spotify', 'Spotify', '🟢', m ? 'spotify:' + m[1] + ':' + m[2] : null);
+  }
+  if (host === 'music.apple.com' || host === 'itunes.apple.com') return R ('apple', 'Apple Music', '🍎', web.replace (/^https?:\/\//i, 'music://'));
+  if (host === 'music.youtube.com') return R ('ytmusic', 'YouTube Music', '🔴', null);
+  if (/(^|\.)youtube\.com$/.test (host) || host === 'youtu.be')
+  {
+    let id = '', list = '';
+    try { const u = new URL (web); id = host === 'youtu.be' ? u.pathname.slice (1) : (u.searchParams.get ('v') || ''); list = u.searchParams.get ('list') || ''; } catch (e) {}
+    const app = list && !id ? 'youtube://www.youtube.com/playlist?list=' + list : id ? 'youtube://www.youtube.com/watch?v=' + id + (list ? '&list=' + list : '') : null;
+    return R ('youtube', 'YouTube', '📺', app);
+  }
+  if (/(^|\.)music\.amazon\.[a-z.]+$/.test (host) || /(^|\.)amazon\.[a-z.]+$/.test (host)) return R ('amazon', 'Amazon Music', '🔷', null);
+  return R ('web', 'Enlace', '🔗', null);
 }
+const MUSIC_ICONS = ['🟢', '🍎', '🔴', '📺', '🔷', '🔗'], MUSIC_NAMES = ['Spotify', 'Apple Music', 'YouTube Music', 'YouTube', 'Amazon Music', 'Enlace'];
+function linkHrefs (url) { const L = musicLink (url); return { web: L.web, app: L.app, name: L.name }; }
 function openLink (url)
 {
   url = String (url || '').trim();
   if (!url) { toast ('Esta tecla no tiene enlace'); return; }
   if (S.playing) musicPause (1);
-  const web = /^https?:/i.test (url) ? url : (/^spotify:/i.test (url) ? url : 'https://' + url);
-  const m = web.match (/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|track|artist|episode|show)\/([A-Za-z0-9]+)/);
-  const app = m ? 'spotify:' + m[1] + ':' + m[2] : (/^spotify:/i.test (web) ? web : null);
-  if (app) tapLink (app, false); else tapLink (web, true);
-  // plan B visible: si no se abrio la app, un toque en este boton abre el enlace en Safari
-  const bar = $('linkBar'); $('linkBarGo').onclick = () => { bar.style.display = 'none'; tapLink (/^spotify:/i.test (web) ? 'https://open.spotify.com/' + web.split (':').slice (1).join ('/') : web, true); };
+  const L = musicLink (url);
+  if (L.app) tapLink (L.app, false); else tapLink (L.web, true);
+  // plan B visible: si no se abrio la app, un toque en este boton abre el enlace
+  const bar = $('linkBar'); $('linkBarName').textContent = L.name;
+  $('linkBarGo').onclick = () => { bar.style.display = 'none'; tapLink (L.web, true); };
   bar.style.display = 'flex'; clearTimeout (openLink.t); openLink.t = setTimeout (() => bar.style.display = 'none', 8000);
 }
 
@@ -544,6 +566,7 @@ function openLink (url)
 function gridSize () { return config.grid || { cols: 6, rows: 4 }; }
 function subFor (b, kk)
 {
+  if (b.type === 'link') return b.url ? 'Abre ' + musicLink (b.url).name : 'Sin enlace';
   if (b.type === 'music.playlist')
   {
     const n = (b.files || []).length;
@@ -818,8 +841,12 @@ $('fSave').onclick = () =>
   }
   if (editImg) b.img = editImg; if (editHot) b.hotkey = editHot;
   if (!b.label && b.file) b.label = b.file.replace (/\.[^.]+$/, '').slice (0, 28);
-  if (b.type === 'link' && (!b.icon || b.icon === '🎵')) b.icon = '🟢';
-  if (b.type === 'link' && !b.label) b.label = 'Spotify';
+  if (b.type === 'link')
+  {
+    const L = musicLink (b.url);
+    if (!b.icon || b.icon === '🎵' || MUSIC_ICONS.includes (b.icon)) b.icon = L.icon;
+    if (!b.label || MUSIC_NAMES.includes (b.label)) b.label = L.name;
+  }
   const DEF = { 'music.playlist': ['📜', 'Lista'], macro: ['⚡', 'Macro'], panic: ['⛔', 'Parar todo'] }[b.type];
   if (DEF) { if (!b.icon || b.icon === '🎵') b.icon = DEF[0]; if (!b.label) b.label = DEF[1]; if (b.type === 'panic') b.color = b.color === '#5cc8ff' ? '#ff5c5c' : b.color; }
   const btns = config.pages[page].buttons; while (btns.length < editIdx) btns.push (null); btns[editIdx] = b;
