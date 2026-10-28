@@ -13,20 +13,44 @@
   const b64u = (s) => Uint8Array.from (atob (s.replace (/-/g, '+').replace (/_/g, '/') + '==='.slice ((s.length + 3) % 4)), c => c.charCodeAt (0));
   let lic = { state: 'off' };      // off | ok | demo | expired
 
+  // ID de este equipo: se crea la primera vez y queda guardado (no viaja en los respaldos)
+  const ID_ABC = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let DEV_ID = null;
+  async function deviceId ()
+  {
+    if (DEV_ID) return DEV_ID;
+    let id = await kvGet ('devid'), ls = null;
+    try { ls = localStorage.getItem ('rfsk_devid'); } catch {}
+    if (!id && ls) id = ls;
+    if (!/^SK-[2-9A-HJ-NP-Z]{4}-[2-9A-HJ-NP-Z]{4}$/.test (id || ''))
+    {
+      const r = crypto.getRandomValues (new Uint8Array (8)); let c = ''; for (const b of r) c += ID_ABC[b & 31];
+      id = 'SK-' + c.slice (0, 4) + '-' + c.slice (4);
+    }
+    await kvSet ('devid', id); try { localStorage.setItem ('rfsk_devid', id); } catch {}
+    return (DEV_ID = id);
+  }
+  const normId = (x) => String (x || '').toUpperCase().replace (/[^A-Z0-9-]/g, '');
+  // Claves: RF2-… (amarrada a uno o varios ID de equipo) · RF1-… (sin ID: solo las entregadas hasta el 28-oct-2026)
+  const RF1_HASTA = '2026-10-28';
+
   async function verifyKey (key)
   {
     key = String (key || '').trim().replace (/\s+/g, '');
-    const m = /^RF1-([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/.exec (key);
+    const m = /^RF([12])-([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]+)$/.exec (key);
     if (!m) return null;
     try
     {
       const [x, y] = LIC_PUB.split ('.');
       const pub = await crypto.subtle.importKey ('jwk', { kty: 'EC', crv: 'P-256', x, y, ext: true }, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
-      const data = b64u (m[1]), sig = b64u (m[2]);
+      const data = b64u (m[2]), sig = b64u (m[3]);
       const ok = await crypto.subtle.verify ({ name: 'ECDSA', hash: 'SHA-256' }, pub, sig, data);
       if (!ok) return null;
       const info = JSON.parse (new TextDecoder().decode (data));
       if (info.p !== 'solo' && info.p !== 'pack') return { wrong: info.p };
+      if (m[1] === '1') { if (!(String (info.i || '') <= RF1_HASTA)) return null; return info; }
+      const ids = (Array.isArray (info.m) ? info.m : [info.m]).map (normId);
+      if (!ids.includes (await deviceId())) return { otherDevice: true, info };
       return info;
     }
     catch (e) { return null; }
@@ -44,7 +68,7 @@
   {
     if (!LIC_PUB || !window.crypto || !crypto.subtle) { lic = { state: 'off' }; return licShow(); }
     const saved = await kvGet ('lic');
-    if (saved && saved.key) { const info = await verifyKey (saved.key); if (info && !info.wrong) { lic = { state: 'ok', info }; return licShow(); } }
+    if (saved && saved.key) { const info = await verifyKey (saved.key); if (info && !info.wrong && !info.otherDevice) { lic = { state: 'ok', info }; return licShow(); } }
     const t0 = await demoStart (), left = Math.ceil (DEMO_DAYS - (Date.now() - t0) / 864e5);
     lic = left > 0 ? { state: 'demo', left } : { state: 'expired' };
     licShow();
@@ -53,7 +77,8 @@
   {
     const info = await verifyKey (key);
     if (info && info.wrong) { msgEl.textContent = 'Esa clave es de ' + (PRODUCTS[info.wrong] || 'otro producto') + ', no de ShowKeys Solo.'; msgEl.style.color = 'var(--red)'; return false; }
-    if (!info) { msgEl.textContent = 'Esa clave no es válida para ShowKeys Solo. Cópiala completa, empieza con RF1-.'; msgEl.style.color = 'var(--red)'; return false; }
+    if (info && info.otherDevice) { msgEl.textContent = 'Esa clave es de otro equipo. El ID de este iPad es ' + (await deviceId()) + ': mándaselo a ' + LIC_CONTACT + ' para recibir tu clave.'; msgEl.style.color = 'var(--red)'; return false; }
+    if (!info) { msgEl.textContent = 'Esa clave no es válida para ShowKeys Solo. Cópiala completa: empieza con RF2-.'; msgEl.style.color = 'var(--red)'; return false; }
     await kvSet ('lic', { key: key.trim(), at: Date.now() });
     lic = { state: 'ok', info }; licShow();
     msgEl.textContent = '✓ Activada a nombre de ' + info.n; msgEl.style.color = 'var(--green)';
@@ -88,6 +113,10 @@
   #licWall { position:fixed; inset:0; z-index:96; background:var(--bg); display:none; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:20px; text-align:center; }
   #licWall input, #setKey { width:min(520px, 90vw); font:14px ui-monospace,Menlo,monospace; background:var(--panel2); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:11px 12px; }
   #setKey { width:100%; }
+  .devid { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; margin:0 0 10px; }
+  #set .devid { justify-content:flex-start; }
+  .devid span { color:var(--dim); font-size:13px; }
+  .devid b { font:600 17px ui-monospace,Menlo,monospace; letter-spacing:.06em; color:var(--cyan); user-select:all; -webkit-user-select:all; }
   `;
   document.head.appendChild (css);
 
@@ -103,7 +132,8 @@
   dSet.innerHTML = `
     <h3>⚙ Ajustes</h3>
     <div class="set-sec" id="setLicSec"><h4>Licencia</h4><p class="hint" id="setLicTxt" style="margin:0 0 8px"></p>
-      <div id="setLicForm"><input id="setKey" placeholder="Pega aquí tu clave (RF1-…)" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="devid"><span>ID de este equipo</span><b class="devidv"></b><button class="hbtn devidc" type="button">Copiar</button></div>
+      <div id="setLicForm"><input id="setKey" placeholder="Pega aquí tu clave (RF2-…)" autocomplete="off" autocapitalize="off" spellcheck="false">
       <div class="actions" style="justify-content:flex-start;margin-top:8px"><button class="hbtn primary" id="setAct">Activar</button></div><p class="hint" id="setMsg"></p></div></div>
     <div class="set-sec"><h4>Crossfade entre canciones</h4>
       <p class="hint" style="margin:0 0 8px">Al tocar otra canción (o en las listas), la que suena baja mientras la nueva sube. 0 = cambio directo.</p>
@@ -148,11 +178,20 @@
     <div style="font-size:46px">🔑</div>
     <div style="font-size:24px;font-weight:700">Terminó la versión de prueba</div>
     <div style="color:var(--dim);max-width:460px;line-height:1.5">Tus teclas y canciones siguen guardadas. Activa tu licencia de ${LIC_CONTACT} para seguir usando RF ShowKeys Solo.</div>
-    <input id="wKey" placeholder="Pega aquí tu clave (RF1-…)" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <div class="devid"><span>ID de este equipo</span><b class="devidv"></b><button class="hbtn devidc" type="button">Copiar</button></div>
+    <div class="hint" style="max-width:460px">Mándale este ID a ${LIC_CONTACT} para recibir tu clave.</div>
+    <input id="wKey" placeholder="Pega aquí tu clave (RF2-…)" autocomplete="off" autocapitalize="off" spellcheck="false">
     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center"><button class="hbtn primary" id="wAct">Activar</button><button class="hbtn" id="wBk">Guardar respaldo</button></div>
     <p class="hint" id="wMsg"></p>`;
   document.body.appendChild (wall);
   $('wAct').onclick = () => activate ($('wKey').value, $('wMsg'));
+  async function showIds () { const id = await deviceId(); document.querySelectorAll ('.devidv').forEach (e => e.textContent = id); }
+  document.addEventListener ('click', async (e) =>
+  {
+    if (!e.target.classList || !e.target.classList.contains ('devidc')) return;
+    const id = await deviceId();
+    try { await navigator.clipboard.writeText (id); toast ('ID copiado: ' + id); } catch { toast ('Tu ID: ' + id); }
+  });
   $('wBk').onclick = () => { const l = $('lib'); if (l && $('bLib')) $('bLib').click(); };
 
   // ------------------------------------------------------------------ ayuda
@@ -237,6 +276,7 @@
     // clave en el enlace (#lic=RF1-...): se activa sola
     const m = /[#&]lic=([^&]+)/.exec (location.hash);
     if (m && LIC_PUB) { await licCheck(); await activate (decodeURIComponent (m[1]), $('setMsg')); history.replaceState (null, '', location.pathname + location.search); }
+    await deviceId(); await showIds();
     await licCheck();
     if (!(await kvGet ('welcomed'))) welcome();
     setInterval (licCheck, 6 * 3600e3);
