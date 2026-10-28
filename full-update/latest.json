@@ -1,7 +1,7 @@
 {
-  "version": "1.6.4",
-  "notes": "Ventana de funciones de Smaart (y otros programas) desde una tecla",
-  "bundle": "bundle-1.6.4.json",
-  "sha256": "b23f6495e6070830b382393b0896121a6fa105b528e4b2750c9a8cc28276ff5b",
+  "version": "1.6.5",
+  "notes": "Actualizador tambien en modo Terminal; ventana de funciones de Smaart",
+  "bundle": "bundle-1.6.5.json",
+  "sha256": "eb4f1085491751e6c3adcf1b4bcb371ab39fe12e7dc82c5009da084166411019",
   "date": "2026-10-28"
 }
