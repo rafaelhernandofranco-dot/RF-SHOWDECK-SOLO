@@ -1,7 +1,7 @@
 {
-  "version": "1.6.9",
-  "notes": "Ventana de funciones de Smaart mucho mas rapida",
-  "bundle": "bundle-1.6.9.json",
-  "sha256": "42a97d5c8c898ad097bf0ef57a007fbccbdbee5b16cbec74725b503894974809",
+  "version": "1.7.0",
+  "notes": "Boton + Hacer tecla: convierte cualquier funcion de Smaart (u otro programa) en una tecla",
+  "bundle": "bundle-1.7.0.json",
+  "sha256": "9b94125a4e9ceb2c2f294c8a77375d8c6840aa19fee5a3c6f4822f9a2658c404",
   "date": "2026-10-28"
 }
