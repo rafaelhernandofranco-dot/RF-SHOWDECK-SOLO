@@ -1,7 +1,7 @@
 {
-  "version": "1.6.7",
-  "notes": "Busca actualizaciones cada vez que abres la app; ventana de funciones sin el menu Servicios",
-  "bundle": "bundle-1.6.7.json",
-  "sha256": "af4a4744a7e743457288830a56d7e4befe18742d5da2c020abd7e77bcf39bfb9",
+  "version": "1.6.8",
+  "notes": "Menu RF ShowKeys > Buscar actualizaciones; busca sola al abrir la app",
+  "bundle": "bundle-1.6.8.json",
+  "sha256": "7b3b1b64aaac9a144dd4ea07766d31f1d52fb97761b1962266b6aa6509cbaea5",
   "date": "2026-10-28"
 }
