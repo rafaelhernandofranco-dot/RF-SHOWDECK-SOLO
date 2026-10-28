@@ -1,7 +1,7 @@
 {
-  "version": "1.6.1",
-  "notes": "Licencia con ID de equipo",
-  "bundle": "bundle-1.6.1.json",
-  "sha256": "16950178e33929496ef0a9e194b6b3aa7d16f2e6e039cede3a750f937427a0c7",
+  "version": "1.6.2",
+  "notes": "Abrir programas (Smaart) y mandarles atajos de teclado desde una tecla o macro",
+  "bundle": "bundle-1.6.2.json",
+  "sha256": "6a26e059cc1a86d0d9f11c45b7946cdcaf5c13280dd0576c32916853295f5946",
   "date": "2026-10-28"
 }
