@@ -1,7 +1,7 @@
 {
-  "version": "1.6.6",
-  "notes": "Ventana de funciones mas limpia (sin el menu Servicios de macOS)",
-  "bundle": "bundle-1.6.6.json",
-  "sha256": "88abed8a2c885c46c0b13addc351ce9f3bfe52d0191186d15fa5cbb313f4c802",
+  "version": "1.6.7",
+  "notes": "Busca actualizaciones cada vez que abres la app; ventana de funciones sin el menu Servicios",
+  "bundle": "bundle-1.6.7.json",
+  "sha256": "af4a4744a7e743457288830a56d7e4befe18742d5da2c020abd7e77bcf39bfb9",
   "date": "2026-10-28"
 }
