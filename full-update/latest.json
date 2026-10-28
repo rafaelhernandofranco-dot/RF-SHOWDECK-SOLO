@@ -1,7 +1,7 @@
 {
-  "version": "1.6.8",
-  "notes": "Menu RF ShowKeys > Buscar actualizaciones; busca sola al abrir la app",
-  "bundle": "bundle-1.6.8.json",
-  "sha256": "7b3b1b64aaac9a144dd4ea07766d31f1d52fb97761b1962266b6aa6509cbaea5",
+  "version": "1.6.9",
+  "notes": "Ventana de funciones de Smaart mucho mas rapida",
+  "bundle": "bundle-1.6.9.json",
+  "sha256": "42a97d5c8c898ad097bf0ef57a007fbccbdbee5b16cbec74725b503894974809",
   "date": "2026-10-28"
 }
