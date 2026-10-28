@@ -1,7 +1,7 @@
 {
-  "version": "1.6.2",
-  "notes": "Abrir programas (Smaart) y mandarles atajos de teclado desde una tecla o macro",
-  "bundle": "bundle-1.6.2.json",
-  "sha256": "6a26e059cc1a86d0d9f11c45b7946cdcaf5c13280dd0576c32916853295f5946",
+  "version": "1.6.3",
+  "notes": "Abrir programas (Smaart, LiveProfessor), atajos de teclado y comandos OSC desde teclas y macros",
+  "bundle": "bundle-1.6.3.json",
+  "sha256": "a8fcb11c806953fa40587f914301dd7322cff3ffeeeff8b861945718522b5983",
   "date": "2026-10-28"
 }
