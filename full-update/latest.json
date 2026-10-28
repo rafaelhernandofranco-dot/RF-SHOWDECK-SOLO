@@ -1,7 +1,7 @@
 {
-  "version": "1.6.5",
-  "notes": "Actualizador tambien en modo Terminal; ventana de funciones de Smaart",
-  "bundle": "bundle-1.6.5.json",
-  "sha256": "eb4f1085491751e6c3adcf1b4bcb371ab39fe12e7dc82c5009da084166411019",
+  "version": "1.6.6",
+  "notes": "Ventana de funciones mas limpia (sin el menu Servicios de macOS)",
+  "bundle": "bundle-1.6.6.json",
+  "sha256": "88abed8a2c885c46c0b13addc351ce9f3bfe52d0191186d15fa5cbb313f4c802",
   "date": "2026-10-28"
 }
