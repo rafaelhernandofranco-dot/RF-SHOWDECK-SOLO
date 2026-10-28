@@ -1,7 +1,7 @@
 {
-  "version": "1.6.3",
-  "notes": "Abrir programas (Smaart, LiveProfessor), atajos de teclado y comandos OSC desde teclas y macros",
-  "bundle": "bundle-1.6.3.json",
-  "sha256": "a8fcb11c806953fa40587f914301dd7322cff3ffeeeff8b861945718522b5983",
+  "version": "1.6.4",
+  "notes": "Ventana de funciones de Smaart (y otros programas) desde una tecla",
+  "bundle": "bundle-1.6.4.json",
+  "sha256": "b23f6495e6070830b382393b0896121a6fa105b528e4b2750c9a8cc28276ff5b",
   "date": "2026-10-28"
 }
