@@ -1,7 +1,7 @@
 {
-  "version": "1.7.2",
-  "notes": "El menu de arriba en el idioma que elijas",
-  "bundle": "bundle-1.7.2.json",
-  "sha256": "f122284e9091ff98f93535b92d2cbab1e621f335c22c1aafe71276fef513f09d",
+  "version": "1.7.3",
+  "notes": "Corrige la ventana de funciones de Smaart",
+  "bundle": "bundle-1.7.3.json",
+  "sha256": "f38af81c8b8dee0bdfea76057628219f8c5f0e40799cf3a9b21b162fe75d03cb",
   "date": "2026-10-29"
 }
