@@ -1,7 +1,7 @@
 {
-  "version": "1.7.1",
-  "notes": "Idiomas: español, English, português, français, italiano (Ajustes → Idioma). Ayuda: cómo controlar Smaart y otros programas",
-  "bundle": "bundle-1.7.1.json",
-  "sha256": "c46266eef0697b8cd66b2c4a3ef46fcc9660d199bd510d1d18c29971c207b6cd",
+  "version": "1.7.2",
+  "notes": "El menu de arriba en el idioma que elijas",
+  "bundle": "bundle-1.7.2.json",
+  "sha256": "f122284e9091ff98f93535b92d2cbab1e621f335c22c1aafe71276fef513f09d",
   "date": "2026-10-29"
 }
