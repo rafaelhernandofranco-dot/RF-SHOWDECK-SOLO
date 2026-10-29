@@ -131,6 +131,7 @@
   const dSet = document.createElement ('dialog'); dSet.id = 'set';
   dSet.innerHTML = `
     <h3>⚙ Ajustes</h3>
+    <div class="set-sec"><h4 data-noi18n>🌐 Idioma / Language</h4><div id="setLang"></div></div>
     <div class="set-sec" id="setLicSec"><h4>Licencia</h4><p class="hint" id="setLicTxt" style="margin:0 0 8px"></p>
       <div class="devid"><span>ID de este equipo</span><b class="devidv"></b><button class="hbtn devidc" type="button">Copiar</button></div>
       <div id="setLicForm"><input id="setKey" placeholder="Pega aquí tu clave (RF2-…)" autocomplete="off" autocapitalize="off" spellcheck="false">
@@ -143,6 +144,7 @@
     <div class="set-sec"><p class="hint" id="setAbout" style="margin:0"></p></div>
     <div class="actions"><button class="hbtn primary" id="setOk">Listo</button></div>`;
   document.body.appendChild (dSet);
+  if (window.rfI18n) { const lp = rfI18n.picker(); lp.style.cssText = 'width:100%;font:15px system-ui;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px'; $('setLang').appendChild (lp); }
 
   const xfTxt = (v) => v > 0 ? v.toFixed (1) + ' s' : 'Apagado';
   bSet.onclick = () =>

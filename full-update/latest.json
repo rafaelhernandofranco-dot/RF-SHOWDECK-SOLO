@@ -1,7 +1,7 @@
 {
-  "version": "1.7.0",
-  "notes": "Boton + Hacer tecla: convierte cualquier funcion de Smaart (u otro programa) en una tecla",
-  "bundle": "bundle-1.7.0.json",
-  "sha256": "9b94125a4e9ceb2c2f294c8a77375d8c6840aa19fee5a3c6f4822f9a2658c404",
-  "date": "2026-10-28"
+  "version": "1.7.1",
+  "notes": "Idiomas: español, English, português, français, italiano (Ajustes → Idioma). Ayuda: cómo controlar Smaart y otros programas",
+  "bundle": "bundle-1.7.1.json",
+  "sha256": "c46266eef0697b8cd66b2c4a3ef46fcc9660d199bd510d1d18c29971c207b6cd",
+  "date": "2026-10-29"
 }
