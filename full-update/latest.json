@@ -1,7 +1,7 @@
 {
-  "version": "1.7.3",
-  "notes": "Corrige la ventana de funciones de Smaart",
-  "bundle": "bundle-1.7.3.json",
-  "sha256": "f38af81c8b8dee0bdfea76057628219f8c5f0e40799cf3a9b21b162fe75d03cb",
+  "version": "1.7.4",
+  "notes": "Ventana de funciones mas limpia",
+  "bundle": "bundle-1.7.4.json",
+  "sha256": "ed3a4ac97a5cd3624c027bf2727515ab8b1e45f8ba71ab08c645eb08b2e423a6",
   "date": "2026-10-29"
 }
