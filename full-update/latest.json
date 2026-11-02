@@ -1,7 +1,7 @@
 {
-  "version": "1.7.7",
-  "notes": "Ventana de funciones: el primer toque cuenta",
-  "bundle": "bundle-1.7.7.json",
-  "sha256": "3dabe0a3a15e842ad0b51b657c7863ff77a45b856dd5ad52aee0bc647ad22049",
+  "version": "1.7.8",
+  "notes": "Nueva ventana Páginas: cuántas, nombre, orden y borrar",
+  "bundle": "bundle-1.7.8.json",
+  "sha256": "8941684236af16379fa7ff62e9dff640d30e035fbb4d7fbb0011699c14573af2",
   "date": "2026-11-02"
 }
