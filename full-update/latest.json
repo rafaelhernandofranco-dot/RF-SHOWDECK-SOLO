@@ -1,7 +1,7 @@
 {
-  "version": "1.7.5",
-  "notes": "Teclas de funcion: se puede escribir la funcion a mano (ej: Options > Signal Generator)",
-  "bundle": "bundle-1.7.5.json",
-  "sha256": "166cfe27d5546455cc926b35633b13377114f93bf6b8af40d073b8b1f13badf0",
+  "version": "1.7.6",
+  "notes": "Windows: ventana de funciones de Smaart y otros programas",
+  "bundle": "bundle-1.7.6.json",
+  "sha256": "77811f2a6e12dee306ef98fc5d4ee79d335d27cf6367ef11ee3fa53c33a4ac53",
   "date": "2026-11-02"
 }
