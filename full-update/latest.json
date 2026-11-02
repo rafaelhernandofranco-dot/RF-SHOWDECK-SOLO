@@ -1,7 +1,7 @@
 {
-  "version": "1.7.4",
-  "notes": "Ventana de funciones mas limpia",
-  "bundle": "bundle-1.7.4.json",
-  "sha256": "ed3a4ac97a5cd3624c027bf2727515ab8b1e45f8ba71ab08c645eb08b2e423a6",
-  "date": "2026-10-29"
+  "version": "1.7.5",
+  "notes": "Teclas de funcion: se puede escribir la funcion a mano (ej: Options > Signal Generator)",
+  "bundle": "bundle-1.7.5.json",
+  "sha256": "166cfe27d5546455cc926b35633b13377114f93bf6b8af40d073b8b1f13badf0",
+  "date": "2026-11-02"
 }
