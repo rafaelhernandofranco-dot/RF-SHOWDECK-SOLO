@@ -1,7 +1,7 @@
 {
-  "version": "1.7.8",
-  "notes": "Nueva ventana Páginas: cuántas, nombre, orden y borrar",
-  "bundle": "bundle-1.7.8.json",
-  "sha256": "8941684236af16379fa7ff62e9dff640d30e035fbb4d7fbb0011699c14573af2",
+  "version": "1.7.9",
+  "notes": "Ventana de funciones: ShowKeys vuelve al frente y muestra el progreso",
+  "bundle": "bundle-1.7.9.json",
+  "sha256": "9e3ebc9c681fc70bec2955bb4b84d66a48c2966b1fe40dada58ffa63faad0768",
   "date": "2026-11-02"
 }
