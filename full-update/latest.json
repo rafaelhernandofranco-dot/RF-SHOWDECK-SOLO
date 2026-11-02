@@ -1,7 +1,7 @@
 {
-  "version": "1.7.9",
-  "notes": "Ventana de funciones: ShowKeys vuelve al frente y muestra el progreso",
-  "bundle": "bundle-1.7.9.json",
-  "sha256": "9e3ebc9c681fc70bec2955bb4b84d66a48c2966b1fe40dada58ffa63faad0768",
+  "version": "1.7.10",
+  "notes": "Ventana de funciones: sale completa sin tener que tocar Actualizar",
+  "bundle": "bundle-1.7.10.json",
+  "sha256": "89092ee36848a22bf67237ba9d9331289f3229fa0806b4dadcd562eff12f64ac",
   "date": "2026-11-02"
 }
