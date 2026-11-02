@@ -1,7 +1,7 @@
 {
-  "version": "1.7.10",
-  "notes": "Ventana de funciones: sale completa sin tener que tocar Actualizar",
-  "bundle": "bundle-1.7.10.json",
-  "sha256": "89092ee36848a22bf67237ba9d9331289f3229fa0806b4dadcd562eff12f64ac",
+  "version": "1.7.11",
+  "notes": "Reloj y temporizador en la barra de arriba",
+  "bundle": "bundle-1.7.11.json",
+  "sha256": "8d82add13abde7d4afa5abf0519f8d00d8e400d1b050a7a58a7333f13ef77688",
   "date": "2026-11-02"
 }
