@@ -1,7 +1,7 @@
 {
-  "version": "1.7.6",
-  "notes": "Windows: ventana de funciones de Smaart y otros programas",
-  "bundle": "bundle-1.7.6.json",
-  "sha256": "77811f2a6e12dee306ef98fc5d4ee79d335d27cf6367ef11ee3fa53c33a4ac53",
+  "version": "1.7.7",
+  "notes": "Ventana de funciones: el primer toque cuenta",
+  "bundle": "bundle-1.7.7.json",
+  "sha256": "3dabe0a3a15e842ad0b51b657c7863ff77a45b856dd5ad52aee0bc647ad22049",
   "date": "2026-11-02"
 }
