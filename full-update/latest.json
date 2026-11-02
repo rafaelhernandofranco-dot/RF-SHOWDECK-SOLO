@@ -1,7 +1,7 @@
 {
-  "version": "1.7.13",
-  "notes": "Windows: aviso inmediato y ShowKeys vuelve al frente",
-  "bundle": "bundle-1.7.13.json",
-  "sha256": "1f193dd2d3afd032f482660276f85ce699bb73b0b94ec7e2512df1c49e1878f6",
+  "version": "1.7.14",
+  "notes": "Windows: los atajos de teclado llegan al programa",
+  "bundle": "bundle-1.7.14.json",
+  "sha256": "e4c02b43d6f753433354b33ee7e8801c800501f3353167f6d14410fdc56f0fe4",
   "date": "2026-11-02"
 }
