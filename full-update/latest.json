@@ -1,7 +1,7 @@
 {
-  "version": "1.7.14",
-  "notes": "Windows: los atajos de teclado llegan al programa",
-  "bundle": "bundle-1.7.14.json",
-  "sha256": "e4c02b43d6f753433354b33ee7e8801c800501f3353167f6d14410fdc56f0fe4",
+  "version": "1.7.15",
+  "notes": "Windows: atajos de teclado como un teclado real",
+  "bundle": "bundle-1.7.15.json",
+  "sha256": "e110bd46ef470b464bc20e672c400a0ed22859d2dab6b4147e5530d482a28d26",
   "date": "2026-11-02"
 }
