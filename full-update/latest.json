@@ -1,7 +1,7 @@
 {
-  "version": "1.7.11",
-  "notes": "Reloj y temporizador en la barra de arriba",
-  "bundle": "bundle-1.7.11.json",
-  "sha256": "8d82add13abde7d4afa5abf0519f8d00d8e400d1b050a7a58a7333f13ef77688",
+  "version": "1.7.12",
+  "notes": "Windows: lectura de menús más segura (Smaart)",
+  "bundle": "bundle-1.7.12.json",
+  "sha256": "5536ec431fd346778f6a9d4bc66c6d94751585588ef6c4daf9275d7d5d891d55",
   "date": "2026-11-02"
 }
