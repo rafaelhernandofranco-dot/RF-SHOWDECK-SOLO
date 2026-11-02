@@ -1,7 +1,7 @@
 {
-  "version": "1.7.12",
-  "notes": "Windows: lectura de menús más segura (Smaart)",
-  "bundle": "bundle-1.7.12.json",
-  "sha256": "5536ec431fd346778f6a9d4bc66c6d94751585588ef6c4daf9275d7d5d891d55",
+  "version": "1.7.13",
+  "notes": "Windows: aviso inmediato y ShowKeys vuelve al frente",
+  "bundle": "bundle-1.7.13.json",
+  "sha256": "1f193dd2d3afd032f482660276f85ce699bb73b0b94ec7e2512df1c49e1878f6",
   "date": "2026-11-02"
 }
