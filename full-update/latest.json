@@ -1,7 +1,7 @@
 {
-  "version": "1.7.15",
-  "notes": "Windows: atajos de teclado como un teclado real",
-  "bundle": "bundle-1.7.15.json",
-  "sha256": "e110bd46ef470b464bc20e672c400a0ed22859d2dab6b4147e5530d482a28d26",
-  "date": "2026-11-02"
+  "version": "1.7.16",
+  "notes": "Mac: nombre RF ShowKeys Full en la barra de menú",
+  "bundle": "bundle-1.7.16.json",
+  "sha256": "4f730092b2796a12800b021ea38f0ffc14e4ef27d3799d0d55f2ff97095b847e",
+  "date": "2026-11-06"
 }
