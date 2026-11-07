@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<script src="i18n-dict.js?v=30"></script><script src="i18n.js?v=30"></script>
+<script src="i18n-dict.js?v=31"></script><script src="i18n.js?v=31"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -88,13 +88,14 @@
   #pClock.tm { color:var(--amber) !important; border-color:#5a4a1c; } #pClock.tmEnd { color:#fff !important; background:#b3261e !important; border-color:#b3261e; animation:blink 1s infinite; }
   #toast { position:fixed; left:50%; bottom:90px; transform:translateX(-50%); background:#1d2c40; border:1px solid var(--line); color:var(--text); padding:10px 16px; border-radius:12px; font-size:14px; display:none; z-index:80; }
   @media (max-height:600px) { .key .ico { font-size:20px; } .key .lbl { font-size:11px; } .key .sub { display:none; } #grid { gap:7px; } }
+  .hbtn:disabled { opacity:.35; cursor:default; }
 </style>
 </head>
 <body>
 <div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF ShowKeys se usa en horizontal</div></div>
 <header>
   <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="name"><b>SHOW</b><i>KEYS</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v30</span></div></div>
+    <div class="name"><b>SHOW</b><i>KEYS</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v31</span></div></div>
   <span class="pill" id="pStore" style="display:none">—</span>
   <button class="pill" id="pAwake" style="background:transparent;cursor:pointer">☀︎ Pantalla…</button>
   <button class="pill" id="pClock" style="background:transparent;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--text)">--:--</button>
@@ -595,7 +596,61 @@ function renderPages ()
     if (editing) b.ondblclick = () => { const n = prompt ('Nombre de la página (vacío = eliminar)', p.name); if (n === null) return; if (n === '') { if (config.pages.length > 1 && confirm ('¿Eliminar la página?')) { config.pages.splice (i, 1); page = 0; } } else p.name = n; save(); render(); };
     nav.appendChild (b);
   });
-  if (editing) { const a = document.createElement ('button'); a.textContent = '+ Página'; a.onclick = () => { config.pages.push ({ name: 'Página ' + (config.pages.length + 1), buttons: [] }); page = config.pages.length - 1; save(); render(); }; nav.appendChild (a); }
+  if (editing)
+  {
+    const a = document.createElement ('button'); a.textContent = '+ Página'; a.onclick = () => { config.pages.push ({ name: (window.rfT || String) ('Página ' + (config.pages.length + 1)), buttons: [] }); page = config.pages.length - 1; save(); render(); }; nav.appendChild (a);
+    const m = document.createElement ('button'); m.textContent = '☰ Páginas'; m.title = 'Cuántas páginas, cambiarles el nombre, ordenarlas o borrarlas'; m.onclick = pagesOpen; nav.appendChild (m);
+  }
+}
+// ---------------- ventana de páginas: cuántas hay, nombre, orden y borrar (igual que en la Full)
+const pgUsed = (p) => (p.buttons || []).filter (b => b && b.type).length;
+let dPg = null;
+function pagesOpen ()
+{
+  if (!dPg)
+  {
+    dPg = document.createElement ('dialog'); dPg.id = 'pgDlg';
+    dPg.innerHTML = `<h3>☰ Páginas</h3>
+      <div class="row"><label>¿Cuántas páginas quieres?</label>
+        <div style="display:flex;gap:8px;align-items:center"><button class="hbtn" id="pgMinus" style="min-width:44px">−</button><b id="pgCount" style="min-width:40px;text-align:center;font-size:20px"></b><button class="hbtn" id="pgPlus" style="min-width:44px">+</button></div>
+        <p class="hint" style="margin:4px 0 0">Con − se borra la última página. Para borrar otra, usa 🗑 en su fila.</p></div>
+      <div id="pgList" style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow:auto;margin:8px 0"></div>
+      <div class="actions"><button class="hbtn primary" id="pgDone">Listo</button></div>`;
+    document.body.appendChild (dPg);
+    dPg.querySelector ('#pgDone').onclick = () => dPg.close();
+    dPg.querySelector ('#pgPlus').onclick = () => { config.pages.push ({ name: (window.rfT || String) ('Página ' + (config.pages.length + 1)), buttons: [] }); pagesChanged(); };
+    dPg.querySelector ('#pgMinus').onclick = () => pageDel (config.pages.length - 1);
+  }
+  pagesDraw(); dPg.showModal();
+}
+function pagesChanged () { if (page >= config.pages.length) page = config.pages.length - 1; save(); render(); pagesDraw(); }
+function pageDel (i)
+{
+  const p = config.pages[i]; if (!p) return;
+  if (config.pages.length <= 1) { alert ('Tiene que quedar al menos una página.'); return; }
+  const n = pgUsed (p);
+  if (n && !confirm ('La página «' + p.name + '» tiene ' + n + ' teclas. ¿Borrarla con sus teclas?')) return;
+  config.pages.splice (i, 1);
+  if (page > i) page--;
+  pagesChanged();
+}
+function pagesDraw ()
+{
+  if (!dPg) return;
+  dPg.querySelector ('#pgCount').textContent = config.pages.length;
+  const list = dPg.querySelector ('#pgList'); list.innerHTML = '';
+  config.pages.forEach ((p, i) =>
+  {
+    const r = document.createElement ('div'); r.style.cssText = 'display:flex;gap:6px;align-items:center';
+    const inp = document.createElement ('input'); inp.value = p.name; inp.setAttribute ('data-noi18n', ''); inp.style.cssText = 'flex:1;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;font:16px system-ui';
+    inp.onchange = () => { p.name = inp.value.trim() || ('Página ' + (i + 1)); save(); render(); };
+    const info = document.createElement ('span'); info.className = 'hint'; info.style.cssText = 'min-width:70px;text-align:right;margin:0'; info.textContent = pgUsed (p) + ' teclas';
+    const mk = (t, title, fn, dis) => { const b = document.createElement ('button'); b.className = 'hbtn'; b.textContent = t; b.title = title; b.disabled = !!dis; b.style.minWidth = '38px'; b.onclick = fn; return b; };
+    const up = mk ('↑', 'Mover arriba', () => { [config.pages[i - 1], config.pages[i]] = [config.pages[i], config.pages[i - 1]]; if (page === i) page = i - 1; else if (page === i - 1) page = i; pagesChanged(); }, i === 0);
+    const dn = mk ('↓', 'Mover abajo', () => { [config.pages[i + 1], config.pages[i]] = [config.pages[i], config.pages[i + 1]]; if (page === i) page = i + 1; else if (page === i + 1) page = i; pagesChanged(); }, i === config.pages.length - 1);
+    const del = mk ('🗑', 'Borrar esta página', () => pageDel (i), config.pages.length <= 1); del.classList.add ('danger'); del.style.marginRight = '0';
+    r.append (inp, info, up, dn, del); list.appendChild (r);
+  });
 }
 function render ()
 {
