@@ -1,7 +1,7 @@
 {
-  "version": "1.7.17",
-  "notes": "Mac: los programas se encuentran aunque el nombre no sea exacto",
-  "bundle": "bundle-1.7.17.json",
-  "sha256": "592e43b0f0ec42a6110a7dc8ef087e10880b049ff217a255a23ac6199c1a0620",
+  "version": "1.7.18",
+  "notes": "Windows: abrir programas aunque el nombre no sea exacto",
+  "bundle": "bundle-1.7.18.json",
+  "sha256": "db7488bd7c7a5647139a6dbbd4b881b96036a85ef5466b7038e8a7222afbad7d",
   "date": "2026-11-09"
 }
