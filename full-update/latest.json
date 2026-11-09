@@ -1,7 +1,7 @@
 {
-  "version": "1.7.16",
-  "notes": "Mac: nombre RF ShowKeys Full en la barra de menú",
-  "bundle": "bundle-1.7.16.json",
-  "sha256": "4f730092b2796a12800b021ea38f0ffc14e4ef27d3799d0d55f2ff97095b847e",
-  "date": "2026-11-06"
+  "version": "1.7.17",
+  "notes": "Mac: los programas se encuentran aunque el nombre no sea exacto",
+  "bundle": "bundle-1.7.17.json",
+  "sha256": "592e43b0f0ec42a6110a7dc8ef087e10880b049ff217a255a23ac6199c1a0620",
+  "date": "2026-11-09"
 }
