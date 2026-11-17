@@ -1,7 +1,7 @@
 {
-  "version": "1.7.20",
-  "notes": "Imagen en las teclas",
-  "bundle": "bundle-1.7.20.json",
-  "sha256": "d3c807f1d11ca407c59af4aea13d612a1d907971904be1d5f6aa45f99feaf46b",
+  "version": "1.7.21",
+  "notes": "La imagen llena toda la tecla",
+  "bundle": "bundle-1.7.21.json",
+  "sha256": "3dcde758c18e15fe815ad100c2486ee96a1d953f987fe09f613528f073052ea6",
   "date": "2026-11-17"
 }
