@@ -1,7 +1,7 @@
 {
-  "version": "1.7.23",
-  "notes": "Biblioteca de imágenes con escenas ilustradas",
-  "bundle": "bundle-1.7.23.json",
-  "sha256": "a3f8e995ae12d89dd6c51cb0bb8cabf3a797172a8edb0553a187afbedda2af94",
+  "version": "1.7.24",
+  "notes": "Las fotos importadas se ven completas en la tecla",
+  "bundle": "bundle-1.7.24.json",
+  "sha256": "66dfa92c4fdfbc4cbdd861c9f0bc25d9e160780cfa0fc5a8a2ea48f4608d7f7a",
   "date": "2026-11-17"
 }

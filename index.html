@@ -90,6 +90,10 @@
   .key.hasimg .bar { position:absolute; z-index:2; }
   .key.hasimg .lbl, .key.hasimg .sub { color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.9); }
   .key.hasimg .kimg, .key.hasimg .ico { display:none; }
+  .key.hasimg.photo { background:#000; }
+  .key.hasimg.photo .kbg, .key.hasimg.photo .kph { position:absolute; inset:0; z-index:0; background-position:center; background-repeat:no-repeat; border-radius:inherit; }
+  .key.hasimg.photo .kbg { inset:-14px; background-size:cover; filter:blur(10px) brightness(.55); }
+  .key.hasimg.photo .kph { background-size:contain; }
   .key .hk { position:absolute; top:14px; right:10px; font-size:10px; font-weight:700; color:var(--dim); border:1px solid var(--line); border-radius:5px; padding:1px 5px; }
   #pClock.tm { color:var(--amber) !important; border-color:#5a4a1c; } #pClock.tmEnd { color:#fff !important; background:#b3261e !important; border-color:#b3261e; animation:blink 1s infinite; }
   #toast { position:fixed; left:50%; bottom:90px; transform:translateX(-50%); background:#1d2c40; border:1px solid var(--line); color:var(--text); padding:10px 16px; border-radius:12px; font-size:14px; display:none; z-index:80; }
@@ -101,7 +105,7 @@
 <div id="rotate"><div style="font-size:40px">↻</div><b>Gira el iPad</b><div style="color:var(--dim);font-size:14px">RF ShowKeys se usa en horizontal</div></div>
 <header>
   <div class="logo"><svg viewBox="0 0 100 100" aria-hidden="true"><polygon points="50,4 90,27 90,73 50,96 10,73 10,27" fill="none" stroke="#5cc8ff" stroke-width="7" stroke-linejoin="round"/><text x="50" y="57" text-anchor="middle" font-family="Avenir Next, sans-serif" font-weight="800" font-size="34" fill="#e6eef8">RF</text><path d="M30 72 Q37 63 44 72 T58 72 T72 72" fill="none" stroke="#ffd166" stroke-width="5" stroke-linecap="round"/></svg>
-    <div class="name"><b>SHOW</b><i>KEYS</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v36</span></div></div>
+    <div class="name"><b>SHOW</b><i>KEYS</i><span class="solo">SOLO</span><span class="solo" style="color:var(--dim);letter-spacing:.1em">v37</span></div></div>
   <span class="pill" id="pStore" style="display:none">—</span>
   <button class="pill" id="pAwake" style="background:transparent;cursor:pointer">☀︎ Pantalla…</button>
   <button class="pill" id="pClock" style="background:transparent;cursor:pointer;font-variant-numeric:tabular-nums;color:var(--text)">--:--</button>
@@ -702,7 +706,7 @@ function render ()
     k.className = 'key' + (lit ? ' lit' : '') + (paused ? ' paused' : '') + (pend ? ' pending' : '');
     k.innerHTML = '<div class="bar"></div><div class="ico"></div><div class="lbl"></div><div class="sub"></div>';
     k.querySelector ('.bar').style.background = b.color || '#5cc8ff';
-    if (b.img) { k.classList.add ('hasimg'); k.style.backgroundImage = 'url("' + b.img + '")'; } else k.querySelector ('.ico').textContent = b.icon || '🎵';
+    if (b.img) { k.classList.add ('hasimg'); if (/^data:image\/svg/.test (b.img)) k.style.backgroundImage = 'url("' + b.img + '")'; else { k.classList.add ('photo'); for (const c of ['kph', 'kbg']) { const d = document.createElement ('div'); d.className = c; d.style.backgroundImage = 'url("' + b.img + '")'; k.prepend (d); } } } else k.querySelector ('.ico').textContent = b.icon || '🎵';
     if (b.hotkey) k.insertAdjacentHTML ('beforeend', '<span class="hk"></span>'), k.querySelector ('.hk').textContent = hotName (b.hotkey);
     k.querySelector ('.lbl').textContent = b.label || '';
     k.querySelector ('.sub').textContent = subFor (b, kk);
@@ -898,9 +902,9 @@ $('imgIn').onchange = () =>
   const f = $('imgIn').files[0]; $('imgIn').value = ''; if (!f) return;
   const im = new Image(); im.onload = () =>
   {
-    const c = document.createElement ('canvas'), s = 360, k = Math.max (s / im.width, s / im.height);
-    c.width = c.height = s; const g = c.getContext ('2d');
-    g.drawImage (im, (s - im.width * k) / 2, (s - im.height * k) / 2, im.width * k, im.height * k);
+    const k = Math.min (1, 480 / Math.max (im.width, im.height)), c = document.createElement ('canvas');   // la foto completa, sin recortar
+    c.width = Math.round (im.width * k); c.height = Math.round (im.height * k); const g = c.getContext ('2d');
+    g.drawImage (im, 0, 0, c.width, c.height);
     editImg = c.toDataURL ('image/jpeg', 0.85); URL.revokeObjectURL (im.src); showImgHot();
   };
   im.src = URL.createObjectURL (f);
