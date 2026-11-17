@@ -1,7 +1,7 @@
 {
-  "version": "1.7.18",
-  "notes": "Windows: abrir programas aunque el nombre no sea exacto",
-  "bundle": "bundle-1.7.18.json",
-  "sha256": "db7488bd7c7a5647139a6dbbd4b881b96036a85ef5466b7038e8a7222afbad7d",
-  "date": "2026-11-09"
+  "version": "1.7.19",
+  "notes": "Al abrir y cerrar la app, la música no queda sonando",
+  "bundle": "bundle-1.7.19.json",
+  "sha256": "91e54fb72a2dcf787f6f462af9dbb2ae8aca1a8494f7d44134e5ce6203aaa90e",
+  "date": "2026-11-17"
 }
