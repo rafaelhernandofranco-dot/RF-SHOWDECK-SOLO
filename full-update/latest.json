@@ -1,7 +1,7 @@
 {
-  "version": "1.7.22",
-  "notes": "Biblioteca de imágenes para las teclas",
-  "bundle": "bundle-1.7.22.json",
-  "sha256": "da450df7828f55a68ff2b3deea6955b14155cb0cb5327487afb9feb1a96401f4",
+  "version": "1.7.23",
+  "notes": "Biblioteca de imágenes con escenas ilustradas",
+  "bundle": "bundle-1.7.23.json",
+  "sha256": "a3f8e995ae12d89dd6c51cb0bb8cabf3a797172a8edb0553a187afbedda2af94",
   "date": "2026-11-17"
 }
