@@ -1,7 +1,7 @@
 {
-  "version": "1.7.19",
-  "notes": "Al abrir y cerrar la app, la música no queda sonando",
-  "bundle": "bundle-1.7.19.json",
-  "sha256": "91e54fb72a2dcf787f6f462af9dbb2ae8aca1a8494f7d44134e5ce6203aaa90e",
+  "version": "1.7.20",
+  "notes": "Imagen en las teclas",
+  "bundle": "bundle-1.7.20.json",
+  "sha256": "d3c807f1d11ca407c59af4aea13d612a1d907971904be1d5f6aa45f99feaf46b",
   "date": "2026-11-17"
 }
